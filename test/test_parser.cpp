@@ -163,5 +163,41 @@ TEST_CASE("Parserclass"){
 		REQUIRE(true == b2);
 		REQUIRE(true == b3);
 	}
+
+	SECTION("convert_floatstring_to_fea_intpair_vector"){
+		std::string l1 =
+			"-85.064448,9.745136,32.264508,236741.67187500000000";
+
+		std::string l2 =
+			"106.110722,10.489016,25.881486,671048.93750000000000";	
+		
+		std::vector<std::pair<int,int>> coord1 =
+			parser.convertLineToFeaCoordinate(l1);
+		std::vector<std::pair<int,int>> coord2 =
+			parser.convertLineToFeaCoordinate(l2);
+
+		INFO(	"c1 x: " << coord1[0].first << "_" << coord1[0].second << "\n" <<
+				"c1 y: " << coord1[1].first << "_" << coord1[1].second << "\n" <<
+				"c1 z: " << coord1[2].first << "_" << coord1[2].second << "\n");
+
+		INFO(	"c2 x: " << coord2[0].first << "_" << coord2[0].second << "\n" <<
+				"c2 y: " << coord2[1].first << "_" << coord2[1].second << "\n" <<
+				"c2 z: " << coord2[2].first << "_" << coord2[2].second << "\n");
+
+		bool b1 =
+			((coord1[0].first == -85) && (coord1[0].second == 64448) &&
+			(coord1[1].first == 9) && (coord1[1].second == 745136) &&
+			(coord1[2].first == 32) && (coord1[2].second == 264508) &&
+			(coord1[3].first == 236741) && (coord1[3].second == 671875));
+		bool b2 =
+			((coord2[0].first == 106) && (coord2[0].second == 110722) &&
+			(coord2[1].first == 10) && (coord2[1].second == 489016) &&
+			(coord2[2].first == 25) && (coord2[2].second == 881486) &&
+			(coord2[3].first == 671048) && (coord2[3].second == 937500));
+		
+		REQUIRE(true == b1);
+		REQUIRE(true == b2);
+	}
+
 } // TEST_CASE("Parserclass")
 
