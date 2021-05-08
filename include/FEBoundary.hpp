@@ -2,6 +2,7 @@
 #define FEAPARSER_H
 
 #include "subheaders/vonMisesNtopFileReader.hpp"
+#include "subheaders/lineparser.hpp"
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -53,7 +54,10 @@ using regionPathLink = std::pair<fs::path, std::vector<CriticalNode>*>;
 
 class FEBoundary{
 public:
-	FEBoundary(std::string id) : id_(id){}
+	FEBoundary(
+		std::string id) :
+			id_(id),
+			parser_(lineparser::Parser(",",".")){}
 	FEBoundary(
 		std::string id,
 		std::string FEfullPath,
@@ -64,7 +68,8 @@ public:
 			FEMeshFull_(fs::path(FEfullPath)),
 			nodesPin_(fs::path(pinPath)),
 			nodesValveThread_(fs::path(threadPath)),
-			nodesPR_(fs::path(PRPath)){
+			nodesPR_(fs::path(PRPath)),
+			parser_(lineparser::Parser(",",".")){
 	// TODO: Replace with reading paths from folders in future
 	// TODO: Rework member variables
 	this->initCriticalRegions({
@@ -72,7 +77,7 @@ public:
 		{this->nodesValveThread_, &this->nodeCoordsThread_},
 		{this->nodesPR_, &this->nodeCoordsPR_}
 		});
-		this->initVonMisesResults();
+	this->initVonMisesResults();
 	}
 
 	std::string getID(){return id_;}
@@ -99,7 +104,13 @@ public:
 		}
 		infile.close();
 		return infileLineCount;
-	} // TODO:: All the way until here
+	}
+
+	const std::vector<std::string> parseFloatsDelimitedString(std::string& s){
+		return this->parser_.separateFloats(s);
+	}
+
+	 // TODO:: All the way until here
 
 	// Returns the absolute value difference of line count with two files.
 	// Param 1 & 2, paths to files to be compared
@@ -156,6 +167,8 @@ public:
 		return 123;
 	}
 private:
+	lineparser::Parser parser_;
+	
 	// Multigoal optimization case ID
 	std::string id_;
 
@@ -186,18 +199,10 @@ private:
 				int x1, x2, y1, y2, z1, z2;		// Actual coordinates
 				int xD1, xD2, yD1, yD2, zD1, zD2;	// Unknown nTopdata in line
 				char deci, delim;
-				if(!(iss >>
-						x1 >> deci >> x2 >> delim >>
-						y1 >> deci >> y2 >> delim >>
-						z1 >> deci >> z2 >> delim >>
-						xD1 >> deci >> xD2 >> delim >>
-						yD1 >> deci >> yD2 >> delim >>
-						zD1 >> deci >> zD2) &&
-							(deci == '.') && (delim ==',')){break;}
-					pair.second->push_back({
-						std::pair(static_cast<int>(x1), static_cast<int>(x2)),
-						std::pair(static_cast<int>(y1), static_cast<int>(y2)),
-						std::pair(static_cast<int>(z1), static_cast<int>(z2))
+				pair.second->push_back({
+					std::pair(static_cast<int>(x1), static_cast<int>(x2)),
+					std::pair(static_cast<int>(y1), static_cast<int>(y2)),
+					std::pair(static_cast<int>(z1), static_cast<int>(z2))
 					});
 			}
 			infile.close();

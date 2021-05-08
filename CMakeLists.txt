@@ -3,9 +3,6 @@ cmake_minimum_required(VERSION 3.10)
 project(feboundary VERSION 1.0.0 LANGUAGES CXX)
 include(GNUInstallDirs)
 add_library(${PROJECT_NAME} INTERFACE)
-#target_compile_features(${PROJECT_NAME} INTERFACE
-#	cxx_std_17
-#	)
 set(CMAKE_CXX_STANDARD 17)
 
 target_include_directories(
@@ -18,7 +15,8 @@ target_include_directories(
 # Part 2: Tests
 find_package(Catch2 REQUIRED)
 #add_executable(feboundary_test test/test.cpp)
-add_executable(feboundary_test test/test_ntop_x_size.cpp)
+#add_executable(feboundary_test test/test_ntop_x_size.cpp)
+add_executable(feboundary_test test/test_parser.cpp)
 target_link_libraries(
 	feboundary_test PRIVATE Catch2::Catch2WithMain
 	${PROJECT_NAME} stdc++fs
