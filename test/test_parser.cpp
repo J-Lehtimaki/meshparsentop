@@ -38,5 +38,25 @@ TEST_CASE("Parserclass"){
 		REQUIRE(vec[2] == "mushroom");
 		REQUIRE(vec.size() == 3);
 	}
+	SECTION("convert_floatString_to_int_pair"){
+		std::string floatString("123.4567");
+		std::pair<int,int> coord = parser.splitFloatStringToIntPair(floatString);
+		REQUIRE(123 == coord.first);
+		REQUIRE(4567 == coord.second);
+
+		floatString = "321.000005";
+		coord = parser.splitFloatStringToIntPair(floatString);
+		REQUIRE(321 == coord.first);
+		REQUIRE(5 == coord.second);
+
+		floatString = "91.50000000000000";
+		try {
+			coord = parser.splitFloatStringToIntPair(floatString);
+			REQUIRE(91 == coord.first);
+			REQUIRE(50000000000000 == coord.second);
+		}catch(const std::out_of_range& oor){
+			WARN("Catch too large number. Message: " << oor.what());
+		}
+	}
 } // TEST_CASE("Parserclass")
 
