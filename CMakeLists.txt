@@ -14,9 +14,13 @@ target_include_directories(
 
 # Part 2: Tests
 find_package(Catch2 REQUIRED)
+
+# Tests, don't remove commented executables
 #add_executable(feboundary_test test/test.cpp)
+add_executable(feboundary_test test/struct_comparators.cpp)
 #add_executable(feboundary_test test/test_ntop_x_size.cpp)
-add_executable(feboundary_test test/test_parser.cpp)
+#add_executable(feboundary_test test/test_parser.cpp)
+
 target_link_libraries(
 	feboundary_test PRIVATE Catch2::Catch2WithMain
 	${PROJECT_NAME} stdc++fs

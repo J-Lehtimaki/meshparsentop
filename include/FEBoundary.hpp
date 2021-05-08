@@ -19,6 +19,12 @@ namespace fe{
 // nTopology's way to export lattice node coordinates
 // xwhole,xdeci,ywhole,ydeci,zwhole,zdeci
 struct CriticalNode{
+	CriticalNode() : 	x(std::pair<int,int>(0,0)),
+						y(std::pair<int,int>(0,0)),
+						z(std::pair<int,int>(0,0)){}
+	CriticalNode(	std::pair<int,int> X,
+					std::pair<int,int> Y,
+					std::pair<int,int> Z) :	x(X), y(Y), z(Z){}
 	std::pair<int,int> x;
 	std::pair<int,int> y;
 	std::pair<int,int> z;
@@ -30,25 +36,24 @@ struct CriticalNode{
 	}
 };
 struct VonMisesNode{
-	std::pair<int,int> x;
-	std::pair<int,int> y;
-	std::pair<int,int> z;
+	VonMisesNode() :	coord(CriticalNode()), stress(0){}
+	VonMisesNode(CriticalNode pCoord, int pStress) :
+		coord(pCoord), stress(pStress){}
+	CriticalNode coord;
 	int stress;
-};
+};/*
 inline bool operator==(const CriticalNode& lhs, const VonMisesNode& rhs){
 	return
 		(lhs.x.first == rhs.x.first) && (lhs.x.second == rhs.x.second) &&
 		(lhs.y.first == rhs.y.first) && (lhs.y.second == rhs.y.second) &&
 		(lhs.z.first == rhs.z.first) && (lhs.z.second == rhs.z.second);	
-};
+}
 inline bool operator==(const VonMisesNode& lhs, const CriticalNode& rhs){
 	return
 		(lhs.x.first == rhs.x.first) && (lhs.x.second == rhs.x.second) &&
 		(lhs.y.first == rhs.y.first) && (lhs.y.second == rhs.y.second) &&
 		(lhs.z.first == rhs.z.first) && (lhs.z.second == rhs.z.second);	
-};
-
-
+}*/
 
 using regionPathLink = std::pair<fs::path, std::vector<CriticalNode>*>;
 
@@ -141,13 +146,14 @@ public:
 		std::vector<CriticalNode> intersections = {};
 		for(auto n1 : vec1){
 			for(auto n2 : vec2){
-				if(n1 == n2){
+				if(n1 == n2.coord){
 					intersections.push_back(n1);
 				}
 			}
 		}
 		return intersections.size();
 	}
+	/*
 	// Returns count how many critical region nodes intersect with
 	// VonMisesCoordinates (FEMeshFull)
 	unsigned intersectionCount( const std::vector<VonMisesNode>& vec1,
@@ -161,7 +167,7 @@ public:
 			}
 		}
 		return intersections.size();
-	}
+	}*/
 
 	unsigned intersectionCount(std::string firstPath, std::string secondPath){
 		return 123;
@@ -195,15 +201,11 @@ private:
 			std::ifstream infile(pair.first);
 			std::string line;				// Manipulate this with std::getline
 			while(std::getline(infile, line)){
-				std::istringstream iss(line);
-				int x1, x2, y1, y2, z1, z2;		// Actual coordinates
-				int xD1, xD2, yD1, yD2, zD1, zD2;	// Unknown nTopdata in line
-				char deci, delim;
-				pair.second->push_back({
-					std::pair(static_cast<int>(x1), static_cast<int>(x2)),
-					std::pair(static_cast<int>(y1), static_cast<int>(y2)),
-					std::pair(static_cast<int>(z1), static_cast<int>(z2))
-					});
+				auto node = this->parser_.convertLineToCoordinate(line);
+				CriticalNode criticalNode = {
+					node[0], node[1], node[2]
+				};
+				pair.second->push_back(criticalNode);
 			}
 			infile.close();
 		}
@@ -213,21 +215,11 @@ private:
 		std::ifstream infile(this->FEMeshFull_);
 		std::string line;
 		while(std::getline(infile, line)){
-			std::istringstream iss(line);
-			int x1, x2, y1, y2, z1, z2, vm1, vm2;
-			char deci, delim;
-			if(!(iss >>
-					x1 >> deci >> x2 >> delim >>
-					y1 >> deci >> y2 >> delim >>
-					z1 >> deci >> z2 >> delim >>
-					vm1 >> deci >> vm2) &&
-						(deci == '.') && (delim == ',')){break;}
-			this->vonMisesNodes_.push_back({
-				std::pair(static_cast<int>(x1), static_cast<int>(x2)),
-				std::pair(static_cast<int>(y1), static_cast<int>(y2)),
-				std::pair(static_cast<int>(z1), static_cast<int>(z2)),
-				static_cast<int>(vm1)
-				});
+			auto feaNode = this->parser_.convertLineToFeaCoordinate(line);
+			VonMisesNode vmNode = {
+				{feaNode[0], feaNode[1], feaNode[2]}, feaNode[3].first
+			}; 
+			this->vonMisesNodes_.push_back(vmNode);
 			}
 		infile.close();
 	}
