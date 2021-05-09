@@ -34,6 +34,12 @@ struct CriticalNode{
 			(this->y.first == rhs.y.first) && (this->y.second == rhs.y.second) &&
 			(this->z.first == rhs.z.first) && (this->z.second == rhs.z.second);
 	}
+	bool operator!=(CriticalNode const & rhs) const {
+		return
+			(this->x.first != rhs.x.first) || (this->x.second != rhs.x.second) ||
+			(this->y.first != rhs.y.first) || (this->y.second != rhs.y.second) ||
+			(this->z.first != rhs.z.first) || (this->z.second != rhs.z.second);
+	}
 };
 struct VonMisesNode{
 	VonMisesNode() :	coord(CriticalNode()), stress(0){}

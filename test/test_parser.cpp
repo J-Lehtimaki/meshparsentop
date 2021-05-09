@@ -10,13 +10,13 @@ TEST_CASE("FEBoudary"){
 
 // FEBoundary constructor parameters
 std::string pathPin =
-"/home/janne/Ohjelmistokehitys/C++/nTop/FEAparse/test/tabularData/robust1/pin";
+"/home/janne/Ohjelmistokehitys/C++/nTop/FEAparse/test/tabularData/robust3/pin";
 std::string pathThread =
-"/home/janne/Ohjelmistokehitys/C++/nTop/FEAparse/test/tabularData/robust1/thread";
+"/home/janne/Ohjelmistokehitys/C++/nTop/FEAparse/test/tabularData/robust3/thread";
 std::string pathPR =
-"/home/janne/Ohjelmistokehitys/C++/nTop/FEAparse/test/tabularData/robust1/pr";
+"/home/janne/Ohjelmistokehitys/C++/nTop/FEAparse/test/tabularData/robust3/pr";
 std::string pathFea =
-"/home/janne/Ohjelmistokehitys/C++/nTop/FEAparse/test/tabularData/robust1/fea";
+"/home/janne/Ohjelmistokehitys/C++/nTop/FEAparse/test/tabularData/robust3/fea";
 
 // Parameters for test case sections
 fe::FEBoundary feHandler("myID", pathFea, pathPin, pathThread, pathPR);
