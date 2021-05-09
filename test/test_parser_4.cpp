@@ -1,4 +1,5 @@
 #include "FEBoundary.hpp"
+#include "subheaders/lineparser.hpp"
 #define CATCH_CONFIG_MAIN
 #define CATCH_CONFIG_ENABLE_BENCHMARKING
 #include <catch2/catch_all.hpp>
@@ -19,29 +20,11 @@ std::string pathFea =
 "/home/janne/Ohjelmistokehitys/C++/nTop/FEAparse/test/tabularData/robust3/fea";
 
 // Parameters for test case sections
-fe::FEBoundary feHandler("myID", pathFea, pathPin, pathThread, pathPR);
-std::string s("scott,mas,mushroom");
-
-	SECTION("stack_oflow_example"){
-		std::vector<std::string> vec = feHandler.parseFloatsDelimitedString(std::ref(s));
-		REQUIRE(vec[0] == "scott");
-		REQUIRE(vec[2] == "mushroom");
-		REQUIRE(vec.size() == 3);
-	}
-
-} // TEST_CASE("FEBoundary")
+//fe::FEBoundary feHandler("myID", pathFea, pathPin, pathThread, pathPR);
+}
 
 TEST_CASE("Parserclass"){
-
 	lineparser::Parser parser(",",".");
-	std::string s("scott,mas,mushroom");
-
-	SECTION("stack_oflow_example"){
-		auto vec = parser.separateFloats(std::ref(s));
-		REQUIRE(vec[0] == "scott");
-		REQUIRE(vec[2] == "mushroom");
-		REQUIRE(vec.size() == 3);
-	}
 
 	SECTION("separate_floatstr_to_strvec"){
 		std::string l1 =
@@ -99,7 +82,7 @@ TEST_CASE("Parserclass"){
 		REQUIRE(70 == ints[6]);
 		REQUIRE(8 == ints[7]);
 	}
-
+	
 	SECTION("convert_floatString_to_int_pair"){
 		std::string floatString("123.4567");
 		std::pair<int,int> coord = parser.splitFloatStringToIntPair(floatString);
@@ -122,17 +105,22 @@ TEST_CASE("Parserclass"){
 		}
 	}
 
+	// Actual format used to export from nTopology in the first phases
 	SECTION("convert_floatstring_to_intpair_vector"){
 		std::string l1 =
-		"-76.883763,10.575940,14.973368,-0.07688376307487,0.01057593990117,0.01497336849570";
+		"-76,883763,10,575940,14,973368,-0,07688376307487,0,01057593990117,0,01497336849570";
 		std::string l2 =
-		"-73.586859,16.805306,13.948498,-0.07358685880899,0.01680530607700,0.01394849829376";
+		"-73,586859,16,805306,13,948498,-0,07358685880899,0,01680530607700,0,01394849829376";
 		std::string l3 =
-		"-63.026294,21.271488,14.808376,-0.06302629411221,0.02127148769796,0.01480837631971";
+		"-63,026294,21,271488,14,808376,-0,06302629411221,0,02127148769796,0,01480837631971";
 
-		std::vector<std::pair<int,int>> coord1 = parser.convertLineToCoordinate(l1);
-		std::vector<std::pair<int,int>> coord2 = parser.convertLineToCoordinate(l2);
-		std::vector<std::pair<int,int>> coord3 = parser.convertLineToCoordinate(l3);
+		auto sVec1 = parser.separateDelimiter(l1);
+		auto sVec2 = parser.separateDelimiter(l2);
+		auto sVec3 = parser.separateDelimiter(l3);
+
+		std::vector<std::pair<int,int>> coord1 = parser.extractCoordinatesFromStrVec(sVec1);
+		std::vector<std::pair<int,int>> coord2 = parser.extractCoordinatesFromStrVec(sVec2);
+		std::vector<std::pair<int,int>> coord3 = parser.extractCoordinatesFromStrVec(sVec3);
 
 		INFO(	"c1 x: " << coord1[0].first << "_" << coord1[0].second << "\n" <<
 				"c1 y: " << coord1[1].first << "_" << coord1[1].second << "\n" <<
@@ -166,37 +154,49 @@ TEST_CASE("Parserclass"){
 
 	SECTION("convert_floatstring_to_fea_intpair_vector"){
 		std::string l1 =
-			"-85.064448,9.745136,32.264508,236741.67187500000000";
+			"-85,064448,9,745136,32,264508,236741.67187500000000";
+		std::string l1Copy = l1;
 
 		std::string l2 =
-			"106.110722,10.489016,25.881486,671048.93750000000000";	
-		
+			"106,110722,10,489016,25,881486,671048.93750000000000";	
+		std::string l2Copy = l2;
+
+		auto sVec1 = parser.separateDelimiter(l1);
+		auto sVec2 = parser.separateDelimiter(l2);
+
 		std::vector<std::pair<int,int>> coord1 =
-			parser.convertLineToFeaCoordinate(l1);
+			parser.extractCoordinatesFromStrVec(sVec1);
 		std::vector<std::pair<int,int>> coord2 =
-			parser.convertLineToFeaCoordinate(l2);
+			parser.extractCoordinatesFromStrVec(sVec2);
 
-		INFO(	"c1 x: " << coord1[0].first << "_" << coord1[0].second << "\n" <<
+
+		int vmCoord1 = parser.getlineVonMisesStress(l1Copy);
+		int vmCoord2 = parser.getlineVonMisesStress(l2Copy);
+
+		WARN(	"c1 x: " << coord1[0].first << "_" << coord1[0].second << "\n" <<
 				"c1 y: " << coord1[1].first << "_" << coord1[1].second << "\n" <<
-				"c1 z: " << coord1[2].first << "_" << coord1[2].second << "\n");
+				"c1 z: " << coord1[2].first << "_" << coord1[2].second << "\n" <<
+				"c1 VonMises: " << vmCoord1 << "Pa");
 
-		INFO(	"c2 x: " << coord2[0].first << "_" << coord2[0].second << "\n" <<
+		WARN(	"c2 x: " << coord2[0].first << "_" << coord2[0].second << "\n" <<
 				"c2 y: " << coord2[1].first << "_" << coord2[1].second << "\n" <<
-				"c2 z: " << coord2[2].first << "_" << coord2[2].second << "\n");
+				"c2 z: " << coord2[2].first << "_" << coord2[2].second << "\n" <<
+				"c2 VonMises: " << vmCoord2 << "Pa");
 
 		bool b1 =
 			((coord1[0].first == -85) && (coord1[0].second == 64448) &&
 			(coord1[1].first == 9) && (coord1[1].second == 745136) &&
 			(coord1[2].first == 32) && (coord1[2].second == 264508) &&
-			(coord1[3].first == 236741) && (coord1[3].second == 671875));
+			(vmCoord1 == 236741));
 		bool b2 =
 			((coord2[0].first == 106) && (coord2[0].second == 110722) &&
 			(coord2[1].first == 10) && (coord2[1].second == 489016) &&
 			(coord2[2].first == 25) && (coord2[2].second == 881486) &&
-			(coord2[3].first == 671048) && (coord2[3].second == 937500));
+			(vmCoord2 == 671048));
 		
 		REQUIRE(true == b1);
 		REQUIRE(true == b2);
+		
 	}
 
 } // TEST_CASE("Parserclass")

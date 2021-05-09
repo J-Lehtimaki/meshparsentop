@@ -26,6 +26,47 @@ const std::vector<std::string> separateFloats(std::string& s){
 	// return {"scott", "tiger", "mushroom"};
 }
 
+const std::vector<std::string> separateDelimiter(std::string& s){
+	this->splittedRow_ = {};
+	size_t pos = 0;
+	std::string token;
+	while ((pos = s.find(delimiter_)) != std::string::npos) {
+	    token = s.substr(0, pos);
+	    this->splittedRow_.push_back(token);
+	    s.erase(0, pos + delimiter_.length());
+	}
+	splittedRow_.push_back(s);	// The last one can't be reached from while loop
+	return this->splittedRow_;
+	// return {"scott", "tiger", "mushroom"};
+}
+
+const std::vector<std::pair<int,int>> extractCoordinatesFromStrVec(
+		const std::vector<std::string> sVec){
+	std::vector<int> intVec = {};
+	std::vector<std::string> strCoords =
+		{sVec[0], sVec[1], sVec[2], sVec[3], sVec[4], sVec[5]};
+	for(auto s : strCoords){
+		if(s.length() <= 6){
+			intVec.push_back(std::stoi(s));
+		}else{
+			intVec.push_back(std::stoi(s.substr(0,6)));
+		}
+	}
+	return {
+		std::pair<int,int>(intVec[0], intVec[1]),
+		std::pair<int,int>(intVec[2], intVec[3]),
+		std::pair<int,int>(intVec[4], intVec[5])
+	};
+}
+
+const int getlineVonMisesStress(std::string& s){
+	auto sVec = this->separateDelimiter(s);
+	std::string stressFloat = sVec[6];
+	auto pair = this->splitFloatStringToIntPair(stressFloat);	
+	return pair.first;	// no decimals
+}
+
+
 // Takes string "1252792.10259512059712509977"
 // Outputs pair<int,int> (1252792,102596) decimal from max 6 characters
 const std::pair<int,int> splitFloatStringToIntPair(std::string s){
@@ -80,7 +121,6 @@ const std::vector<std::pair<int,int>> convertLineToFeaCoordinate(std::string& s)
 	}
 	return {intPairs[0],intPairs[1],intPairs[2],intPairs[3]};	// x, y, z, vm
 } 
-
 
 private:
 	std::vector<std::string> splittedRow_;
