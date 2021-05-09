@@ -1,4 +1,3 @@
-#include "FEBoundary.hpp"
 #include "subheaders/lineparser.hpp"
 #define CATCH_CONFIG_MAIN
 #define CATCH_CONFIG_ENABLE_BENCHMARKING
@@ -6,22 +5,6 @@
 
 #include <vector>
 #include <string>
-
-TEST_CASE("FEBoudary"){
-
-// FEBoundary constructor parameters
-std::string pathPin =
-"/home/janne/Ohjelmistokehitys/C++/nTop/FEAparse/test/tabularData/robust3/pin";
-std::string pathThread =
-"/home/janne/Ohjelmistokehitys/C++/nTop/FEAparse/test/tabularData/robust3/thread";
-std::string pathPR =
-"/home/janne/Ohjelmistokehitys/C++/nTop/FEAparse/test/tabularData/robust3/pr";
-std::string pathFea =
-"/home/janne/Ohjelmistokehitys/C++/nTop/FEAparse/test/tabularData/robust3/fea";
-
-// Parameters for test case sections
-//fe::FEBoundary feHandler("myID", pathFea, pathPin, pathThread, pathPR);
-}
 
 TEST_CASE("Parserclass"){
 	lineparser::Parser parser(",",".");
@@ -102,6 +85,20 @@ TEST_CASE("Parserclass"){
 			REQUIRE(500000 == coord.second);
 		}catch(const std::out_of_range& oor){
 			WARN("Catch too large number. Message: " << oor.what());
+		}
+
+		std::vector<std::string> strValues = {
+			"500000000.00000000000005",
+			"3333333333333.3333333333333",
+			"250000000.0004000000000"
+		};
+		for(auto strTest : strValues){
+			try{
+				parser.splitStressFloatString(strTest);
+			}catch(std::out_of_range& oor){
+				WARN("Something is wrong with splitFloatStringToIntPair"
+					<< strTest);
+			}
 		}
 	}
 

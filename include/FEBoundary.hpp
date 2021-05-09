@@ -43,22 +43,22 @@ struct CriticalNode{
 };
 struct VonMisesNode{
 	VonMisesNode() :	coord(CriticalNode()), stress(0){}
-	VonMisesNode(CriticalNode pCoord, int pStress) :
+	VonMisesNode(CriticalNode pCoord, unsigned int pStress) :
 		coord(pCoord), stress(pStress){}
 	CriticalNode coord;
-	int stress;
+	unsigned int stress;
 };/*
 inline bool operator==(const CriticalNode& lhs, const VonMisesNode& rhs){
 	return
 		(lhs.x.first == rhs.x.first) && (lhs.x.second == rhs.x.second) &&
 		(lhs.y.first == rhs.y.first) && (lhs.y.second == rhs.y.second) &&
-		(lhs.z.first == rhs.z.first) && (lhs.z.second == rhs.z.second);	
+		(lhs.z.first == rhs.z.first) && (lhs.z.second == rhs.z.second);
 }
 inline bool operator==(const VonMisesNode& lhs, const CriticalNode& rhs){
 	return
 		(lhs.x.first == rhs.x.first) && (lhs.x.second == rhs.x.second) &&
 		(lhs.y.first == rhs.y.first) && (lhs.y.second == rhs.y.second) &&
-		(lhs.z.first == rhs.z.first) && (lhs.z.second == rhs.z.second);	
+		(lhs.z.first == rhs.z.first) && (lhs.z.second == rhs.z.second);
 }*/
 
 using regionPathLink = std::pair<fs::path, std::vector<CriticalNode>*>;
@@ -96,7 +96,7 @@ public:
 	const std::vector<CriticalNode>& getPinNodes(){return this->nodeCoordsPin_;}
 	const std::vector<CriticalNode>& getThreadNodes(){return this->nodeCoordsThread_;}
 	const std::vector<CriticalNode>& getPRNodes(){return this->nodeCoordsPR_;}
-	
+
 	// TODO: Shift these to external file
 	int getSubfolderConstant(){return vm::SUBCONST;}
 	unsigned int iterateOverN(unsigned int n){
@@ -131,7 +131,7 @@ public:
 		unsigned secondNodeCount = this->getLineCount(secondPath);
 		return std::abs(static_cast<int>(firstNodeCount - secondNodeCount));
 	}
-	
+
 	// Checks if critical regions intersect. Returns count of intersections.
 	unsigned intersectionCount(	const std::vector<CriticalNode>& vec1,
 								const std::vector<CriticalNode>& vec2){
@@ -180,7 +180,7 @@ public:
 	}
 private:
 	lineparser::Parser parser_;
-	
+
 	// Multigoal optimization case ID
 	std::string id_;
 
@@ -194,7 +194,7 @@ private:
 
 	// vonMises results
 	std::vector<VonMisesNode> vonMisesNodes_;
-	
+
 	// Node coordinates for critical regions
 	std::vector<CriticalNode> nodeCoordsPin_;
 	std::vector<CriticalNode> nodeCoordsThread_;
@@ -207,9 +207,16 @@ private:
 			std::ifstream infile(pair.first);
 			std::string line;				// Manipulate this with std::getline
 			while(std::getline(infile, line)){
-				auto node = this->parser_.convertLineToCoordinate(line);
+				std::vector<std::pair<int,int>> coord;
+				try{
+					coord = this->parser_.convertLineToCoordinate(line);
+				}catch(const std::out_of_range& oor){
+					std::cerr 	<< "From initCriticalRegion, FEBoundary"
+								<< oor.what() << std::endl;
+				}
+
 				CriticalNode criticalNode = {
-					node[0], node[1], node[2]
+					coord[0], coord[1], coord[2]
 				};
 				pair.second->push_back(criticalNode);
 			}
@@ -221,10 +228,28 @@ private:
 		std::ifstream infile(this->FEMeshFull_);
 		std::string line;
 		while(std::getline(infile, line)){
-			auto feaNode = this->parser_.convertLineToFeaCoordinate(line);
+			std::string copyLine = line;
+			std::vector<std::string> sVec;
+			std::vector<std::pair<int,int>> coord;
+			unsigned int vmStress;
+			try{
+				sVec = this->parser_.separateDelimiter(line);
+				coord = this->parser_.extractCoordinatesFromStrVec(sVec);
+			}catch(const std::out_of_range& oor){
+				std::cerr 	<< "From init von mises, creating coords"
+							<< oor.what() << std::endl;
+			}
+
+			try{
+				vmStress = this->parser_.getlineVonMisesStress(copyLine);
+			}catch(std::out_of_range& oor){
+				std::cerr 	<< "From init von mises, creating stress level"
+							<< oor.what() << std::endl;
+			}
+
 			VonMisesNode vmNode = {
-				{feaNode[0], feaNode[1], feaNode[2]}, feaNode[3].first
-			}; 
+				{coord[0], coord[1], coord[2]}, vmStress
+			};
 			this->vonMisesNodes_.push_back(vmNode);
 			}
 		infile.close();

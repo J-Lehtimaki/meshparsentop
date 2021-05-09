@@ -23,21 +23,20 @@ const std::vector<std::string> separateFloats(std::string& s){
 	}
 	splittedRow_.push_back(s);	// The last one can't be reached from while loop
 	return this->splittedRow_;
-	// return {"scott", "tiger", "mushroom"};
 }
 
-const std::vector<std::string> separateDelimiter(std::string& s){
+const std::vector<std::string> separateDelimiter(const std::string s){
+	std::string sCopy = s;
 	this->splittedRow_ = {};
 	size_t pos = 0;
 	std::string token;
-	while ((pos = s.find(delimiter_)) != std::string::npos) {
-	    token = s.substr(0, pos);
+	while ((pos = sCopy.find(delimiter_)) != std::string::npos) {
+	    token = sCopy.substr(0, pos);
 	    this->splittedRow_.push_back(token);
-	    s.erase(0, pos + delimiter_.length());
+	    sCopy.erase(0, pos + delimiter_.length());
 	}
-	splittedRow_.push_back(s);	// The last one can't be reached from while loop
+	splittedRow_.push_back(sCopy);	// The last one can't be reached from while loop
 	return this->splittedRow_;
-	// return {"scott", "tiger", "mushroom"};
 }
 
 const std::vector<std::pair<int,int>> extractCoordinatesFromStrVec(
@@ -59,11 +58,11 @@ const std::vector<std::pair<int,int>> extractCoordinatesFromStrVec(
 	};
 }
 
-const int getlineVonMisesStress(std::string& s){
+const unsigned int getlineVonMisesStress(std::string& s){
 	auto sVec = this->separateDelimiter(s);
 	std::string stressFloat = sVec[6];
-	auto pair = this->splitFloatStringToIntPair(stressFloat);	
-	return pair.first;	// no decimals
+	unsigned int stress = this->splitStressFloatString(stressFloat);
+	return stress;	// no decimals
 }
 
 
@@ -86,6 +85,19 @@ const std::pair<int,int> splitFloatStringToIntPair(std::string s){
 	}
 }
 
+// Splits VonMises Stress float. Stress value goes so high that it cannot be
+// captured by int -types. Thus long int.
+const unsigned int splitStressFloatString(std::string s){
+	std::string sCopy = s;
+	size_t pos = 0;
+	std::string first;
+	while((pos = sCopy.find(dot_)) != std::string::npos){
+		first = sCopy.substr(0, pos);
+		sCopy.erase(0, pos + dot_.length());
+	}
+	return std::stoul(first);
+}
+
 // USE THIS ONLY WHEN YOU DON'T CARE ABOUT LEADING ZEROS IN THE DECIMALS
 // THIS METHOD LOOSES ALL PRECISION FROM DOUBLES. "124.00010" -> (123,10)
 // >>> Can be used to evaluate equality of datastructures generated from files
@@ -94,7 +106,7 @@ const std::pair<int,int> splitFloatStringToIntPair(std::string s){
 // Returns always the first 3 floats.
 // Note: separator and dot have to be set correctly in this->constructor
 // Note2: decimal is trimmed for leading zeros.
-const std::vector<std::pair<int,int>> convertLineToCoordinate(std::string& s){
+const std::vector<std::pair<int,int>> convertDotDecimalLineToCoordinate(std::string& s){
 	std::vector<std::pair<int,int>> intPairs = {};
 	auto splitDelimiterVec = this->separateFloats(s);
 	for(auto floatString : splitDelimiterVec){
@@ -102,8 +114,26 @@ const std::vector<std::pair<int,int>> convertLineToCoordinate(std::string& s){
 		intPairs.push_back(intPair);
 	}
 	return {intPairs[0],intPairs[1],intPairs[2]};	// x, y, z
-} 
+}
 
+// USE THIS ONLY WHEN YOU DON'T CARE ABOUT LEADING ZEROS IN THE DECIMALS
+// THIS METHOD LOOSES ALL PRECISION FROM DOUBLES. "124.00010" -> (123,10)
+// >>> Can be used to evaluate equality of datastructures generated from files
+// >>> since all floats are converted in same fashion.
+// Takes some "12512,6126126,126,1251,12525,12,125125.12512,1251.12515 <...>"
+// Returns always the first 6 first in pairs of 2 ints.
+// Note: separator and dot have to be set correctly in this->constructor
+// Note2: decimal is trimmed for leading zeros.
+const std::vector<std::pair<int,int>> convertLineToCoordinate(std::string& s){
+	std::vector<std::pair<int,int>> intPairs = {};
+	auto sVec = this->separateFloats(s);
+	std::pair<int,int> x(std::stoi(sVec[0]), std::stoi(sVec[1]));
+	std::pair<int,int> y(std::stoi(sVec[2]), std::stoi(sVec[3]));
+	std::pair<int,int> z(std::stoi(sVec[4]), std::stoi(sVec[5]));
+	return {x,y,z};	// x, y, z
+}
+
+/*
 // USE THIS ONLY WHEN YOU DON'T CARE ABOUT LEADING ZEROS IN THE DECIMALS
 // THIS METHOD LOOSES ALL PRECISION FROM DOUBLES. "124.00010" -> (123,10)
 // >>> Can be used to evaluate equality of datastructures generated from files
@@ -120,7 +150,7 @@ const std::vector<std::pair<int,int>> convertLineToFeaCoordinate(std::string& s)
 		intPairs.push_back(intPair);
 	}
 	return {intPairs[0],intPairs[1],intPairs[2],intPairs[3]};	// x, y, z, vm
-} 
+}*/
 
 private:
 	std::vector<std::string> splittedRow_;
@@ -130,4 +160,3 @@ private:
 }	// namespace
 
 #endif
-
