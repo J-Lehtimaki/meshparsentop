@@ -97,15 +97,6 @@ public:
 	const std::vector<CriticalNode>& getThreadNodes(){return this->nodeCoordsThread_;}
 	const std::vector<CriticalNode>& getPRNodes(){return this->nodeCoordsPR_;}
 
-	// TODO: Shift these to external file
-	int getSubfolderConstant(){return vm::SUBCONST;}
-	unsigned int iterateOverN(unsigned int n){
-		unsigned int result = 0;
-		for (unsigned int i=0; i<n; i++) {
-			result++;
-		}
-		return result;
-	}
 	unsigned getLineCount(const std::string path){
 		std::ifstream infile(path);		// Open path for reading
 		unsigned infileLineCount = 0;		// Record line count here
@@ -116,12 +107,6 @@ public:
 		infile.close();
 		return infileLineCount;
 	}
-
-	const std::vector<std::string> parseFloatsDelimitedString(std::string& s){
-		return this->parser_.separateFloats(s);
-	}
-
-	 // TODO:: All the way until here
 
 	// Returns the absolute value difference of line count with two files.
 	// Param 1 & 2, paths to files to be compared
@@ -159,7 +144,7 @@ public:
 		}
 		return intersections.size();
 	}
-	/*
+
 	// Returns count how many critical region nodes intersect with
 	// VonMisesCoordinates (FEMeshFull)
 	unsigned intersectionCount( const std::vector<VonMisesNode>& vec1,
@@ -167,13 +152,13 @@ public:
 		std::vector<VonMisesNode> intersections = {};
 		for(auto n1 : vec1){
 			for(auto n2 : vec2){
-				if(n1 == n2){
+				if(n1.coord == n2){
 					intersections.push_back(n1);
 				}
 			}
 		}
 		return intersections.size();
-	}*/
+	}
 
 	unsigned intersectionCount(std::string firstPath, std::string secondPath){
 		return 123;

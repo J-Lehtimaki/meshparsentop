@@ -30,6 +30,7 @@ TEST_CASE("files_with_unkown_line_count", "[light]"){
 		auto t = threadNodeVec[4516];
 		auto pr = prNodeVec[4379];
 		auto pin = pinNodeVec[11926];
+		auto vm = vonMisesVec[186190];
 
 		REQUIRE(107 == t.x.first);
 		REQUIRE(961297 == t.x.second);
@@ -52,9 +53,16 @@ TEST_CASE("files_with_unkown_line_count", "[light]"){
 		REQUIRE(0 == pin.z.first);
 		REQUIRE(692834 == pin.z.second);
 
+		REQUIRE(76 == vm.coord.x.first);
+		REQUIRE(241873 == vm.coord.x.second);
+		REQUIRE(20 == vm.coord.y.first);
+		REQUIRE(528365 == vm.coord.y.second);
+		REQUIRE(40 == vm.coord.z.first);
+		REQUIRE(49028 == vm.coord.z.second);
+		REQUIRE(19395580 == vm.stress);
 	}
 }
-/*
+
 TEST_CASE("O2", "[heavy]"){
 	std::string pathPin = "/home/janne/Ohjelmistokehitys/C++/nTop/FEAparse/test/tabularData/robust3/pin";
 	std::string pathThread = "/home/janne/Ohjelmistokehitys/C++/nTop/FEAparse/test/tabularData/robust3/thread";
@@ -67,12 +75,18 @@ TEST_CASE("O2", "[heavy]"){
 	std::vector<fe::CriticalNode> pinNodeVec = feHandler.getPinNodes();
 	std::vector<fe::CriticalNode> prNodeVec = feHandler.getPRNodes();
 	
-	SECTION("intersections_by_vector"){
-		REQUIRE(feHandler.getThreadNodes().size() == feHandler.intersectionCount(
-			threadNodeVec, threadNodeVec));
-		REQUIRE(feHandler.getThreadNodes().size() == feHandler.intersectionCount(
+	SECTION("intersections_thread_fea"){
+		REQUIRE(threadNodeVec.size() == feHandler.intersectionCount(
 			threadNodeVec, vonMisesVec));
 	}
 
+	SECTION("intersections_pin_fea"){
+		REQUIRE(pinNodeVec.size() == feHandler.intersectionCount(
+			pinNodeVec, vonMisesVec));
+	}
+
+	SECTION("intersections_pr_fea"){
+		REQUIRE(prNodeVec.size() == feHandler.intersectionCount(
+			prNodeVec, vonMisesVec));
+	}
 }
-*/
