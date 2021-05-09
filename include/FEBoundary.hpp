@@ -11,6 +11,8 @@
 #include <cmath>
 #include <vector>
 #include <map>
+#include <algorithm>
+#include <memory>
 
 namespace fs = std::filesystem;
 
@@ -117,6 +119,7 @@ public:
 		return std::abs(static_cast<int>(firstNodeCount - secondNodeCount));
 	}
 
+	// OVERLOADED
 	// Checks if critical regions intersect. Returns count of intersections.
 	unsigned intersectionCount(	const std::vector<CriticalNode>& vec1,
 								const std::vector<CriticalNode>& vec2){
@@ -130,6 +133,7 @@ public:
 		}
 		return intersections.size();
 	}
+	// OVERLOAD
 	// Returns count how many critical region nodes intersect with
 	// VonMisesCoordinates (FEMeshFull)
 	unsigned intersectionCount( const std::vector<CriticalNode>& vec1,
@@ -144,7 +148,7 @@ public:
 		}
 		return intersections.size();
 	}
-
+	// OVERLOAD
 	// Returns count how many critical region nodes intersect with
 	// VonMisesCoordinates (FEMeshFull)
 	unsigned intersectionCount( const std::vector<VonMisesNode>& vec1,
@@ -160,9 +164,19 @@ public:
 		return intersections.size();
 	}
 
-	unsigned intersectionCount(std::string firstPath, std::string secondPath){
-		return 123;
+	// Sort region and return lowest and highest stress value node
+	std::pair<VonMisesNode, VonMisesNode> sortFullMeshByStress(){
+		std::sort(	std::begin(this->vonMisesNodes_),
+					std::end(this->vonMisesNodes_),
+					[](VonMisesNode& a, VonMisesNode& b){
+			return a.stress <= b.stress;
+		});
+		return std::make_pair(
+			this->vonMisesNodes_[0],
+			this->vonMisesNodes_[this->vonMisesNodes_.size() - 1]
+			);
 	}
+
 private:
 	lineparser::Parser parser_;
 

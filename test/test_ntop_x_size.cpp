@@ -74,19 +74,41 @@ TEST_CASE("O2", "[heavy]"){
 	std::vector<fe::CriticalNode> threadNodeVec = feHandler.getThreadNodes();
 	std::vector<fe::CriticalNode> pinNodeVec = feHandler.getPinNodes();
 	std::vector<fe::CriticalNode> prNodeVec = feHandler.getPRNodes();
-	
+
 	SECTION("intersections_thread_fea"){
-		REQUIRE(threadNodeVec.size() == feHandler.intersectionCount(
-			threadNodeVec, vonMisesVec));
+		unsigned intersections = feHandler.intersectionCount(
+			threadNodeVec, vonMisesVec);
+		
+		REQUIRE(4517 == threadNodeVec.size());
 	}
 
 	SECTION("intersections_pin_fea"){
-		REQUIRE(pinNodeVec.size() == feHandler.intersectionCount(
-			pinNodeVec, vonMisesVec));
+		unsigned intersections = feHandler.intersectionCount(
+			pinNodeVec, vonMisesVec);
+		REQUIRE(11927 == pinNodeVec.size());
 	}
 
 	SECTION("intersections_pr_fea"){
-		REQUIRE(prNodeVec.size() == feHandler.intersectionCount(
-			prNodeVec, vonMisesVec));
+		unsigned intersections = feHandler.intersectionCount(
+			prNodeVec, vonMisesVec);
+		REQUIRE(4380 == prNodeVec.size());
 	}
+
+	SECTION("sort_fe_mesh"){
+		auto vmPair = feHandler.sortFullMeshByStress();
+		WARN(	"Minimum vMises: " << vmPair.first.stress << '\n' <<
+				" Coords:" << '\n' <<
+				"    xyz: (" <<
+				vmPair.first.coord.x.first << ", " <<
+				vmPair.first.coord.y.first << ", " <<
+				vmPair.first.coord.z.first << ")" << '\n' << 
+				"Maximum vMises: " << vmPair.second.stress << '\n' <<
+				"  Coords:" << '\n' <<
+				"    xyz: (" <<
+				vmPair.second.coord.x.first << ", " <<
+				vmPair.second.coord.y.first << ", " <<
+				vmPair.second.coord.z.first << ")" << '\n'
+			);
+	}
+
 }
