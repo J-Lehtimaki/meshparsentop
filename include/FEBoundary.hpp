@@ -72,25 +72,32 @@ public:
 			id_(id),
 			parser_(lineparser::Parser(",",".")){}
 	FEBoundary(
-		std::string id,
-		std::string FEfullPath,
-		std::string pinPath,
-		std::string threadPath,
-		std::string PRPath) :
-			id_(id),
-			FEMeshFull_(fs::path(FEfullPath)),
-			nodesPin_(fs::path(pinPath)),
-			nodesValveThread_(fs::path(threadPath)),
-			nodesPR_(fs::path(PRPath)),
-			parser_(lineparser::Parser(",",".")){
-	// TODO: Replace with reading paths from folders in future
-	// TODO: Rework member variables
-	this->initCriticalRegions({
-		{this->nodesPin_, &this->nodeCoordsPin_},
-		{this->nodesValveThread_, &this->nodeCoordsThread_},
-		{this->nodesPR_, &this->nodeCoordsPR_}
+			std::string id,
+			std::string FEfullPath,
+			std::string pinPath,
+			std::string threadPath,
+			std::string PRPath) :
+				id_(id),
+				FEMeshFull_(fs::path(FEfullPath)),
+				nodesPin_(fs::path(pinPath)),
+				nodesValveThread_(fs::path(threadPath)),
+				nodesPR_(fs::path(PRPath)),
+				parser_(lineparser::Parser(",",".")){
+		this->initCriticalRegions({
+			{this->nodesPin_, &this->nodeCoordsPin_},
+			{this->nodesValveThread_, &this->nodeCoordsThread_},
+			{this->nodesPR_, &this->nodeCoordsPR_}
 		});
-	this->initVonMisesResults();
+		this->initVonMisesResults();	
+	}
+
+	void initAllBoundaryRegions(){
+		this->initVonMisesBoundaryRegions(
+			this->nodeCoordsPin_, this->vmPin_);
+		this->initVonMisesBoundaryRegions(
+			this->nodeCoordsThread_, this->vmThread_);
+		this->initVonMisesBoundaryRegions(
+			this->nodeCoordsPR_, this->vmPr_);
 	}
 
 	std::string getID(){return id_;}
@@ -98,6 +105,9 @@ public:
 	const std::vector<CriticalNode>& getPinNodes(){return this->nodeCoordsPin_;}
 	const std::vector<CriticalNode>& getThreadNodes(){return this->nodeCoordsThread_;}
 	const std::vector<CriticalNode>& getPRNodes(){return this->nodeCoordsPR_;}
+	const std::vector<std::shared_ptr<VonMisesNode>> getPinVonMises(){return this->vmPin_;}
+	const std::vector<std::shared_ptr<VonMisesNode>> getThreadVonMises(){return this->vmThread_;}
+	const std::vector<std::shared_ptr<VonMisesNode>> getPrVonMises(){return this->vmPr_;}
 
 	unsigned getLineCount(const std::string path){
 		std::ifstream infile(path);		// Open path for reading
@@ -177,6 +187,38 @@ public:
 			);
 	}
 
+	// Calculates input region stress recursively. Helps to manage that sum
+	// of indexes does not exceed integer range limits.
+	double regionStressAverage(const std::vector<std::shared_ptr<VonMisesNode>>& regionNodes){
+		if(regionNodes.size() == 1){
+			return static_cast<double>(regionNodes[0]->stress);
+		}
+		if(regionNodes.size() == 2){
+			return (
+				static_cast<double>(regionNodes[0]->stress) +
+				static_cast<double>(regionNodes[1]->stress)
+				) / 2;
+		}
+		unsigned mid = regionNodes.size() / 2;
+
+		std::vector<std::shared_ptr<VonMisesNode>> firstHalf;
+		std::copy(
+			regionNodes.begin(),
+			std::next(regionNodes.begin(), mid),
+			std::back_inserter(firstHalf)
+		);
+
+		std::vector<std::shared_ptr<VonMisesNode>> secondHalf;
+		std::copy(
+			std::next(std::next(regionNodes.begin(), mid)),
+			regionNodes.end(),
+			std::back_inserter(secondHalf)
+		);
+
+		return (	regionStressAverage(firstHalf) +
+					regionStressAverage(secondHalf)		) / 2;
+	}
+
 private:
 	lineparser::Parser parser_;
 
@@ -198,6 +240,11 @@ private:
 	std::vector<CriticalNode> nodeCoordsPin_;
 	std::vector<CriticalNode> nodeCoordsThread_;
 	std::vector<CriticalNode> nodeCoordsPR_;
+
+	// vonMises for regions
+	std::vector<std::shared_ptr<VonMisesNode>> vmPin_;
+	std::vector<std::shared_ptr<VonMisesNode>> vmThread_;
+	std::vector<std::shared_ptr<VonMisesNode>> vmPr_;
 
 	// Takes a set of paths and references to CriticalNode-vector and then
 	// pushes all the values from file to the datastructure that was passed
@@ -254,7 +301,21 @@ private:
 		infile.close();
 	}
 
+	void initVonMisesBoundaryRegions(const std::vector<CriticalNode>& nodeVec,
+		std::vector<std::shared_ptr<VonMisesNode>>& targetVec){
+		targetVec = {};	// clear contents to prevent duplicates
+		for(auto n1 : nodeVec){
+			for(auto n2 : this->vonMisesNodes_){
+				if(n1 == n2.coord){
+					targetVec.push_back(
+						std::make_shared<VonMisesNode>(n2)
+					);
+				}
+			}
+		}
+	}
 };
 
 }
 #endif
+

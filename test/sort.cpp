@@ -41,12 +41,34 @@ double myRecursiveAverage(const std::vector<int>& vec){
 }
 
 const std::vector<int> getSubVec(const std::vector<int>& vec,
-	unsigned l1, unsigned l2){
+		unsigned l1, unsigned l2){
 	auto iter1 = std::next(vec.begin(), l1);
 	auto iter2 = std::next(vec.begin(), l2);
 	std::vector<int> dest;
 	std::copy(iter1, iter2, std::back_inserter(dest));
 	return dest;
+}
+
+using VmItPair = std::pair<
+		std::shared_ptr<fe::VonMisesNode>,
+		std::shared_ptr<fe::VonMisesNode>
+	>;
+
+void printRegionStressData(fe::FEBoundary& feHandler, const std::string& id,
+		std::vector<std::shared_ptr<fe::VonMisesNode>>& regionVec){
+	std::vector<int> endDistanceIndex = {};
+	for(unsigned i=1; i<=10; i++){
+		endDistanceIndex.push_back(-10*i);
+	} 
+	for(auto i : endDistanceIndex){
+		std::vector<std::shared_ptr<fe::VonMisesNode>> temp;
+		std::copy(
+			std::prev(regionVec.end(), i),
+			regionVec.end(),
+			std::back_inserter(temp)
+		);
+		WARN("Stress " << id << feHandler.regionStressAverage(temp) << " Pa");
+	}
 }
 
 std::string GLOBAL_MESSAGE = "";
@@ -68,6 +90,17 @@ TEST_CASE("files_with_unkown_line_count", "[light]"){
 
 	SECTION("constructor_added_id"){
 		REQUIRE("myID" == feHandler.getID());
+	}
+
+	SECTION("init_boundary_regions_vm"){
+		feHandler.initAllBoundaryRegions();
+		auto pinRegionVM = feHandler.getPinVonMises();
+		auto threadRegionVM = feHandler.getThreadVonMises();
+		auto prRegionVM = feHandler.getPrVonMises();
+
+		printRegionStressData(feHandler, "PIN", pinRegionVM);
+		printRegionStressData(feHandler, "THEARD", threadRegionVM);
+		printRegionStressData(feHandler, "PR", prRegionVM);
 	}
 
 	SECTION("get_sub_vector"){
