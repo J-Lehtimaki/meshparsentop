@@ -88,5 +88,11 @@ TEST_CASE("files_with_unkown_line_count", "[light]"){
 		feHandler.getPrMinMax().second);
 	}
 
+	SECTION("subMesh_average"){
+		WARN("SubMesh average: " << feHandler.getSubMeshAverage() <<
+		" Pa\nMin: " << feHandler.getSubMeshMinMax().first << " Max: " <<
+		feHandler.getSubMeshMinMax().second);	
+	}
+
 }
 

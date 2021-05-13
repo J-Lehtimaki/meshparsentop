@@ -96,6 +96,11 @@ public:
 		this->initAllBoundaryAveragesVM();
 		this->sortAllBoundaryRegions();
 		this->initBoundaryMinMaxStresses();
+		// Subtract pin, thread, PR from main mesh
+		this->subtractRegionFromSubtractMesh(this->nodeCoordsPin_);
+		this->subtractRegionFromSubtractMesh(this->nodeCoordsThread_);
+		this->subtractRegionFromSubtractMesh(this->nodeCoordsPR_);
+	 	this->finalizeSubtractedRegionVM();
 	}
 
 	std::string getID(){return id_;}
@@ -108,24 +113,33 @@ public:
 	const double getPinAverage(){return this->pinRegionStress_.average;}
 	const double getThreadAverage(){return this->threadRegionStress_.average;}
 	const double getPrAverage(){return this->PrRegionStress_.average;}
-	const std::pair<double, double> getPinMinMax(){
+	const double getSubMeshAverage(){return this->subtractedMesh_.average;}
+
+	const std::pair<double,double> getPinMinMax(){
 		return std::make_pair(
 			this->pinRegionStress_.minStress,
 			this->pinRegionStress_.maxStress
 		);
 	}
-	const std::pair<double, double> getThreadMinMax(){
+	const std::pair<double,double> getThreadMinMax(){
 		return std::make_pair(
 			this->threadRegionStress_.minStress,
 			this->threadRegionStress_.maxStress
 		);
 	}
-	const std::pair<double, double> getPrMinMax(){
+	const std::pair<double,double> getPrMinMax(){
 		return std::make_pair(
 			this->PrRegionStress_.minStress,
 			this->PrRegionStress_.maxStress
 		);
 	}
+	const std::pair<double,double> getSubMeshMinMax(){
+		return std::make_pair(
+			this->subtractedMesh_.minStress,
+			this->subtractedMesh_.maxStress
+		);
+	}
+
 
 	unsigned getLineCount(const std::string path){
 		std::ifstream infile(path);		// Open path for reading
@@ -222,7 +236,8 @@ private:
 	// vonMises results
 	std::vector<VonMisesNode> vonMisesNodes_;
 
-	// vonMises boundary regions
+	// vonMises separate regions
+	RegionStressData subtractedMesh_;
 	RegionStressData pinRegionStress_;
 	RegionStressData threadRegionStress_;
 	RegionStressData PrRegionStress_;
@@ -259,6 +274,27 @@ private:
 		this->threadRegionStress_.average = this->myRecursiveAverage(
 			this->threadRegionStress_.correspondingFEnodes
 		);
+	}
+
+	// The VM ptr vector should already be instantiated when using this
+	void finalizeSubtractedRegionVM(){
+		// Calc average
+		this->subtractedMesh_.average = this->myRecursiveAverage(
+			this->subtractedMesh_.correspondingFEnodes
+		);
+		// Sort for getting min max, and for printing orderly freqdistribution
+		std::sort(std::begin(this->subtractedMesh_.correspondingFEnodes),
+			std::end(this->subtractedMesh_.correspondingFEnodes),
+			[](std::shared_ptr<VonMisesNode>& a,
+			std::shared_ptr<VonMisesNode>& b){
+				return a->stress <= b->stress;
+			});
+		// Make min max
+		this->subtractedMesh_.minStress = this->subtractedMesh_.
+			correspondingFEnodes[0]->stress;
+		size_t s = this->subtractedMesh_.correspondingFEnodes.size()-1;
+		this->subtractedMesh_.maxStress = this->subtractedMesh_.
+			correspondingFEnodes[s]->stress;
 	}
 
 	void sortAllBoundaryRegions(){
@@ -306,6 +342,19 @@ private:
 		this->PrRegionStress_.maxStress = this->PrRegionStress_.
 			correspondingFEnodes[s3]->stress;
 
+	}
+
+	// Subtracts boundary region from full mesh
+	void subtractRegionFromSubtractMesh(const std::vector<CriticalNode>& nVec){
+		std::vector<std::shared_ptr<VonMisesNode>> vmVec = {};
+		for(auto nPin : nVec){
+			for(auto feNode : this->subtractedMesh_.correspondingFEnodes){
+				if(nPin != feNode->coord){
+					vmVec.push_back(feNode);
+				}
+			}
+		}
+		this->subtractedMesh_.correspondingFEnodes = vmVec;
 	}
 
 	// Calculates average recursively. Helps to manage that sum(vec_i) does not
@@ -400,6 +449,13 @@ private:
 			this->vonMisesNodes_.push_back(vmNode);
 			}
 		infile.close();
+
+		// Create pointer vector for subtractring regions
+		for(auto n : this->vonMisesNodes_){
+			this->subtractedMesh_.correspondingFEnodes.push_back(
+				std::make_shared<VonMisesNode>(n)
+			);
+		}
 	}
 
 
