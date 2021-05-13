@@ -70,18 +70,16 @@ TEST_CASE("files_with_unkown_line_count", "[light]"){
 		REQUIRE("myID" == feHandler.getID());
 	}
 
-	SECTION("get_sub_vector"){
-		auto result = getSubVec(INTS, 2, 5);
-		for(auto value : result){
-			WARN(value);
-		}
+	SECTION("pin_average"){
+		WARN("Pin average: " << feHandler.getPinAverage() << " Pa");
 	}
 
-	SECTION("try_recursive"){
-		WARN("My average: " << myRecursiveAverage(INTS));
-		hello();
-		WARN(GLOBAL_MESSAGE);
+	SECTION("thread_average"){
+		WARN("Thread average: " << feHandler.getThreadAverage() << " Pa");
 	}
 
+	SECTION("pr_average"){
+		WARN("PR average: " << feHandler.getPrAverage() << " Pa");
+	}
 }
 

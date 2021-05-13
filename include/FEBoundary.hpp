@@ -49,19 +49,21 @@ struct VonMisesNode{
 		coord(pCoord), stress(pStress){}
 	CriticalNode coord;
 	unsigned int stress;
-};/*
-inline bool operator==(const CriticalNode& lhs, const VonMisesNode& rhs){
-	return
-		(lhs.x.first == rhs.x.first) && (lhs.x.second == rhs.x.second) &&
-		(lhs.y.first == rhs.y.first) && (lhs.y.second == rhs.y.second) &&
-		(lhs.z.first == rhs.z.first) && (lhs.z.second == rhs.z.second);
-}
-inline bool operator==(const VonMisesNode& lhs, const CriticalNode& rhs){
-	return
-		(lhs.x.first == rhs.x.first) && (lhs.x.second == rhs.x.second) &&
-		(lhs.y.first == rhs.y.first) && (lhs.y.second == rhs.y.second) &&
-		(lhs.z.first == rhs.z.first) && (lhs.z.second == rhs.z.second);
-}*/
+};
+
+struct StressFrequencyDistribution{
+	double lowerBoundStress;
+	double upperBoundStress;
+	unsigned nOccurance;
+};
+
+struct RegionStressData{
+	double maxStress;
+	double minStress;
+	double average;
+	std::vector<StressFrequencyDistribution> stressFrequencyDistribution;
+	std::vector<std::shared_ptr<VonMisesNode>> correspondingFEnodes;
+};
 
 using regionPathLink = std::pair<fs::path, std::vector<CriticalNode>*>;
 
@@ -83,14 +85,14 @@ public:
 			nodesValveThread_(fs::path(threadPath)),
 			nodesPR_(fs::path(PRPath)),
 			parser_(lineparser::Parser(",",".")){
-	// TODO: Replace with reading paths from folders in future
-	// TODO: Rework member variables
-	this->initCriticalRegions({
-		{this->nodesPin_, &this->nodeCoordsPin_},
-		{this->nodesValveThread_, &this->nodeCoordsThread_},
-		{this->nodesPR_, &this->nodeCoordsPR_}
+		this->initCriticalRegions({
+			{this->nodesPin_, &this->nodeCoordsPin_},
+			{this->nodesValveThread_, &this->nodeCoordsThread_},
+			{this->nodesPR_, &this->nodeCoordsPR_}
 		});
-	this->initVonMisesResults();
+		this->initVonMisesResults();
+		this->initAllBoundaryRegionsVM();
+		this->initAllBoundaryAveragesVM();
 	}
 
 	std::string getID(){return id_;}
@@ -98,6 +100,11 @@ public:
 	const std::vector<CriticalNode>& getPinNodes(){return this->nodeCoordsPin_;}
 	const std::vector<CriticalNode>& getThreadNodes(){return this->nodeCoordsThread_;}
 	const std::vector<CriticalNode>& getPRNodes(){return this->nodeCoordsPR_;}
+
+	// Getters from boundary structs
+	const double getPinAverage(){return this->pinRegionStress_.average;}
+	const double getThreadAverage(){return this->threadRegionStress_.average;}
+	const double getPrAverage(){return this->PrRegionStress_.average;}
 
 	unsigned getLineCount(const std::string path){
 		std::ifstream infile(path);		// Open path for reading
@@ -194,10 +201,105 @@ private:
 	// vonMises results
 	std::vector<VonMisesNode> vonMisesNodes_;
 
+	// vonMises boundary regions
+	RegionStressData pinRegionStress_;
+	RegionStressData threadRegionStress_;
+	RegionStressData PrRegionStress_;
+
 	// Node coordinates for critical regions
 	std::vector<CriticalNode> nodeCoordsPin_;
 	std::vector<CriticalNode> nodeCoordsThread_;
 	std::vector<CriticalNode> nodeCoordsPR_;
+/*
+struct StressFrequencyDistribution{
+	double lowerBoundStress;
+	double upperBoundStress;
+	unsigned nOccurance;
+};
+
+struct RegionStressData{
+	double maxStress;
+	double minStress;
+	double average;
+	std::vector<StressFrequencyDistribution> stressFrequencyDistribution;
+	std::vector<std::shared_ptr<VonMisesNode>> correspondingFEnodes;
+};
+*/
+
+	void initAllBoundaryRegionsVM(){
+		// PR
+		this->initBoundaryRegionVM(this->nodeCoordsPR_,
+			this->PrRegionStress_.correspondingFEnodes
+		);
+		// Pin
+		this->initBoundaryRegionVM(this->nodeCoordsPin_,
+			this->pinRegionStress_.correspondingFEnodes
+		);
+		// Thread
+		this->initBoundaryRegionVM(this->nodeCoordsThread_,
+			this->threadRegionStress_.correspondingFEnodes
+		);
+	}
+
+	void initAllBoundaryAveragesVM(){
+		// PR 
+		this->PrRegionStress_.average = this->myRecursiveAverage(
+			this->PrRegionStress_.correspondingFEnodes
+		);
+		// Thread
+		this->pinRegionStress_.average = this->myRecursiveAverage(
+			this->pinRegionStress_.correspondingFEnodes
+		);
+		// Pin
+		this->threadRegionStress_.average = this->myRecursiveAverage(
+			this->threadRegionStress_.correspondingFEnodes
+		);
+	}
+
+	
+
+	// Calculates average recursively. Helps to manage that sum(vec_i) does not
+	// exceed integer range limit
+	double myRecursiveAverage(const std::vector<std::shared_ptr<VonMisesNode>>& vec){
+		if(vec.size() == 1){
+			return static_cast<double>(vec[0]->stress);
+		}
+		if(vec.size() == 2){
+			return (
+				static_cast<double>(vec[0]->stress) +
+				static_cast<double>(vec[1]->stress)
+				) / 2;
+		}
+		unsigned mid = vec.size() / 2;
+		
+		std::vector<std::shared_ptr<VonMisesNode>> firstHalf;
+		std::copy(vec.begin(), std::next(vec.begin(), mid),
+			std::back_inserter(firstHalf));
+			
+		std::vector<std::shared_ptr<VonMisesNode>> secondHalf;
+		std::copy(std::next(std::next(vec.begin(), mid)), vec.end(),
+			std::back_inserter(secondHalf));
+	
+		return(
+			myRecursiveAverage(firstHalf) +
+			myRecursiveAverage(secondHalf)
+			) / 2;
+	}
+
+	void initBoundaryRegionVM(const std::vector<CriticalNode>& cVec,
+			std::vector<std::shared_ptr<VonMisesNode>>& vmVec){
+		for(auto c : cVec){
+			for(auto vm : this->vonMisesNodes_){
+				if(c == vm.coord){
+					vmVec.push_back(std::make_shared<VonMisesNode>(vm));
+				}
+			}
+		}
+	}
+
+
+
+
 
 	// Takes a set of paths and references to CriticalNode-vector and then
 	// pushes all the values from file to the datastructure that was passed
@@ -253,6 +355,7 @@ private:
 			}
 		infile.close();
 	}
+
 
 };
 
