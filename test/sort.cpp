@@ -71,15 +71,22 @@ TEST_CASE("files_with_unkown_line_count", "[light]"){
 	}
 
 	SECTION("pin_average"){
-		WARN("Pin average: " << feHandler.getPinAverage() << " Pa");
+		WARN("Pin average: " << feHandler.getPinAverage() <<
+		" Pa\nMin: " << feHandler.getPinMinMax().first << " Max: " << 
+		feHandler.getPinMinMax().second);
 	}
 
 	SECTION("thread_average"){
-		WARN("Thread average: " << feHandler.getThreadAverage() << " Pa");
+		WARN("Thread average: " << feHandler.getThreadAverage() <<
+		" Pa\nMin: " << feHandler.getThreadMinMax().first << " Max: " <<
+		feHandler.getPinMinMax().second);
 	}
 
 	SECTION("pr_average"){
-		WARN("PR average: " << feHandler.getPrAverage() << " Pa");
+		WARN("PR average: " << feHandler.getPrAverage() <<
+		" Pa\nMin: " << feHandler.getPrMinMax().first << " Max: " <<
+		feHandler.getPrMinMax().second);
 	}
+
 }
 

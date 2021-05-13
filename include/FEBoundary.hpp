@@ -43,6 +43,7 @@ struct CriticalNode{
 			(this->z.first != rhs.z.first) || (this->z.second != rhs.z.second);
 	}
 };
+
 struct VonMisesNode{
 	VonMisesNode() :	coord(CriticalNode()), stress(0){}
 	VonMisesNode(CriticalNode pCoord, unsigned int pStress) :
@@ -93,6 +94,8 @@ public:
 		this->initVonMisesResults();
 		this->initAllBoundaryRegionsVM();
 		this->initAllBoundaryAveragesVM();
+		this->sortAllBoundaryRegions();
+		this->initBoundaryMinMaxStresses();
 	}
 
 	std::string getID(){return id_;}
@@ -105,6 +108,24 @@ public:
 	const double getPinAverage(){return this->pinRegionStress_.average;}
 	const double getThreadAverage(){return this->threadRegionStress_.average;}
 	const double getPrAverage(){return this->PrRegionStress_.average;}
+	const std::pair<double, double> getPinMinMax(){
+		return std::make_pair(
+			this->pinRegionStress_.minStress,
+			this->pinRegionStress_.maxStress
+		);
+	}
+	const std::pair<double, double> getThreadMinMax(){
+		return std::make_pair(
+			this->threadRegionStress_.minStress,
+			this->threadRegionStress_.maxStress
+		);
+	}
+	const std::pair<double, double> getPrMinMax(){
+		return std::make_pair(
+			this->PrRegionStress_.minStress,
+			this->PrRegionStress_.maxStress
+		);
+	}
 
 	unsigned getLineCount(const std::string path){
 		std::ifstream infile(path);		// Open path for reading
@@ -210,32 +231,18 @@ private:
 	std::vector<CriticalNode> nodeCoordsPin_;
 	std::vector<CriticalNode> nodeCoordsThread_;
 	std::vector<CriticalNode> nodeCoordsPR_;
-/*
-struct StressFrequencyDistribution{
-	double lowerBoundStress;
-	double upperBoundStress;
-	unsigned nOccurance;
-};
+	
 
-struct RegionStressData{
-	double maxStress;
-	double minStress;
-	double average;
-	std::vector<StressFrequencyDistribution> stressFrequencyDistribution;
-	std::vector<std::shared_ptr<VonMisesNode>> correspondingFEnodes;
-};
-*/
+	/* MEMBER FUNCTIONS PRIVATE */
 
 	void initAllBoundaryRegionsVM(){
 		// PR
 		this->initBoundaryRegionVM(this->nodeCoordsPR_,
 			this->PrRegionStress_.correspondingFEnodes
-		);
-		// Pin
+		);		// Pin
 		this->initBoundaryRegionVM(this->nodeCoordsPin_,
 			this->pinRegionStress_.correspondingFEnodes
-		);
-		// Thread
+		);		// Thread
 		this->initBoundaryRegionVM(this->nodeCoordsThread_,
 			this->threadRegionStress_.correspondingFEnodes
 		);
@@ -245,18 +252,61 @@ struct RegionStressData{
 		// PR 
 		this->PrRegionStress_.average = this->myRecursiveAverage(
 			this->PrRegionStress_.correspondingFEnodes
-		);
-		// Thread
+		);		// Thread
 		this->pinRegionStress_.average = this->myRecursiveAverage(
 			this->pinRegionStress_.correspondingFEnodes
-		);
-		// Pin
+		);		// Pin
 		this->threadRegionStress_.average = this->myRecursiveAverage(
 			this->threadRegionStress_.correspondingFEnodes
 		);
 	}
 
-	
+	void sortAllBoundaryRegions(){
+		// Sorting threads
+		std::sort(std::begin(this->threadRegionStress_.correspondingFEnodes),
+			std::end(this->threadRegionStress_.correspondingFEnodes),
+			[](std::shared_ptr<VonMisesNode>& a,
+				std::shared_ptr<VonMisesNode>& b){
+		return a->stress <= b->stress;
+		});		// Sorting pin
+		std::sort(std::begin(this->pinRegionStress_.correspondingFEnodes),
+			std::end(this->pinRegionStress_.correspondingFEnodes),
+			[](std::shared_ptr<VonMisesNode>& a,
+				std::shared_ptr<VonMisesNode>& b){
+		return a->stress <= b->stress;
+		});		// Sorting PR
+		std::sort(std::begin(this->PrRegionStress_.correspondingFEnodes),
+			std::end(this->PrRegionStress_.correspondingFEnodes),
+			[](std::shared_ptr<VonMisesNode>& a,
+				std::shared_ptr<VonMisesNode>& b){
+		return a->stress <= b->stress;
+		});
+	}
+
+	// Precond: RegionStressVectors are sorted
+	void initBoundaryMinMaxStresses(){
+		// Threads: min, max
+		this->threadRegionStress_.minStress = this->threadRegionStress_.
+			correspondingFEnodes[0]->stress;
+		size_t s1 = this->threadRegionStress_.correspondingFEnodes.size()-1;
+		this->threadRegionStress_.maxStress = this->threadRegionStress_.
+			correspondingFEnodes[s1]->stress;
+
+		// Pin: min, max
+		this->pinRegionStress_.minStress = this->pinRegionStress_.
+			correspondingFEnodes[0]->stress;
+		size_t s2 = this->pinRegionStress_.correspondingFEnodes.size()-1;
+		this->pinRegionStress_.maxStress = this->pinRegionStress_.
+			correspondingFEnodes[s2]->stress;
+
+		// PR: min, max
+		this->PrRegionStress_.minStress = this->PrRegionStress_.
+			correspondingFEnodes[0]->stress;
+		size_t s3 = this->PrRegionStress_.correspondingFEnodes.size()-1;
+		this->PrRegionStress_.maxStress = this->PrRegionStress_.
+			correspondingFEnodes[s3]->stress;
+
+	}
 
 	// Calculates average recursively. Helps to manage that sum(vec_i) does not
 	// exceed integer range limit
@@ -296,10 +346,6 @@ struct RegionStressData{
 			}
 		}
 	}
-
-
-
-
 
 	// Takes a set of paths and references to CriticalNode-vector and then
 	// pushes all the values from file to the datastructure that was passed
