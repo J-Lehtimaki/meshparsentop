@@ -108,12 +108,12 @@ public:
 		this->sortAllBoundaryRegions();
 		this->initBoundaryMinMaxStresses();
 		// Subtract pin, thread, PR from main mesh
-		/*
+		
 		this->subtractRegionFromSubtractMesh(this->nodeCoordsPin_);
 		this->subtractRegionFromSubtractMesh(this->nodeCoordsThread_);
 		this->subtractRegionFromSubtractMesh(this->nodeCoordsPR_);
 	 	this->finalizeSubtractedRegionVM();
-		 */
+		 
 	}
 
 	std::string getID(){return id_;}
@@ -362,7 +362,9 @@ private:
 		std::vector<std::shared_ptr<VonMisesNode>> vmVec = {};
 		for(auto nPin : nVec){
 			for(auto feNode : this->subtractedMesh_.correspondingFEnodes){
-				if(nPin != feNode->coord){
+				if(nPin == feNode->coord){
+					;
+				}else{
 					vmVec.push_back(feNode);
 				}
 			}
