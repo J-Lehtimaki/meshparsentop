@@ -109,10 +109,10 @@ public:
 		this->initBoundaryMinMaxStresses();
 		// Subtract pin, thread, PR from main mesh
 		
-		this->subtractRegionFromSubtractMesh(this->nodeCoordsPin_);
-		this->subtractRegionFromSubtractMesh(this->nodeCoordsThread_);
-		this->subtractRegionFromSubtractMesh(this->nodeCoordsPR_);
-	 	this->finalizeSubtractedRegionVM();
+		//this->subtractRegionFromSubtractMesh(this->nodeCoordsPin_);
+		//this->subtractRegionFromSubtractMesh(this->nodeCoordsThread_);
+		//this->subtractRegionFromSubtractMesh(this->nodeCoordsPR_);
+	 	//this->finalizeSubtractedRegionVM();
 		 
 	}
 

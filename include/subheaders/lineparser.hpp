@@ -65,7 +65,6 @@ const unsigned int getlineVonMisesStress(std::string& s){
 	return stress;	// no decimals
 }
 
-
 // Takes string "1252792.10259512059712509977"
 // Outputs pair<int,int> (1252792,102596) decimal from max 6 characters
 const std::pair<int,int> splitFloatStringToIntPair(std::string s){
@@ -132,25 +131,6 @@ const std::vector<std::pair<int,int>> convertLineToCoordinate(std::string& s){
 	std::pair<int,int> z(std::stoi(sVec[4]), std::stoi(sVec[5]));
 	return {x,y,z};	// x, y, z
 }
-
-/*
-// USE THIS ONLY WHEN YOU DON'T CARE ABOUT LEADING ZEROS IN THE DECIMALS
-// THIS METHOD LOOSES ALL PRECISION FROM DOUBLES. "124.00010" -> (123,10)
-// >>> Can be used to evaluate equality of datastructures generated from files
-// >>> since all floats are converted in same fashion.
-// Takes some "12512.6126126,126.1251,12525.12,125125.12512,1251.12515 <...>"
-// Returns always the first 4 floats.
-// Note: separator and dot have to be set correctly in this->constructor
-// Note2: decimal is trimmed for leading zeros.
-const std::vector<std::pair<int,int>> convertLineToFeaCoordinate(std::string& s){
-	std::vector<std::pair<int,int>> intPairs = {};
-	auto splitDelimiterVec = this->separateFloats(s);
-	for(auto floatString : splitDelimiterVec){
-		auto intPair = this->splitFloatStringToIntPair(floatString);
-		intPairs.push_back(intPair);
-	}
-	return {intPairs[0],intPairs[1],intPairs[2],intPairs[3]};	// x, y, z, vm
-}*/
 
 private:
 	std::vector<std::string> splittedRow_;
