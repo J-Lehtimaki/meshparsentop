@@ -23,10 +23,9 @@ find_package(Catch2 REQUIRED)
 #add_executable(feboundary_test test/test_parser_4.cpp)
 add_executable(feboundary_test test/sort.cpp)
 
-
+# Note: MSVC links filesystem automatically
 target_link_libraries(
 	feboundary_test PRIVATE Catch2::Catch2WithMain
-	${PROJECT_NAME} stdc++fs
 	)
 target_include_directories(feboundary_test PRIVATE
 	${PROJECT_SOURCE_DIR}/include

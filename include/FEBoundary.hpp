@@ -59,6 +59,12 @@ struct StressFrequencyDistribution{
 };
 
 struct RegionStressData{
+	RegionStressData() :
+		maxStress(0),
+		minStress(0),
+		average(0),
+		stressFrequencyDistribution({}),
+		correspondingFEnodes({}){}
 	double maxStress;
 	double minStress;
 	double average;
@@ -85,22 +91,29 @@ public:
 			nodesPin_(fs::path(pinPath)),
 			nodesValveThread_(fs::path(threadPath)),
 			nodesPR_(fs::path(PRPath)),
-			parser_(lineparser::Parser(",",".")){
+			parser_(lineparser::Parser(",",".")),
+			subtractedMesh_(RegionStressData()),
+			pinRegionStress_(RegionStressData()),
+			threadRegionStress_(RegionStressData()),
+			PrRegionStress_(RegionStressData()){
 		this->initCriticalRegions({
 			{this->nodesPin_, &this->nodeCoordsPin_},
 			{this->nodesValveThread_, &this->nodeCoordsThread_},
 			{this->nodesPR_, &this->nodeCoordsPR_}
 		});
+
 		this->initVonMisesResults();
 		this->initAllBoundaryRegionsVM();
 		this->initAllBoundaryAveragesVM();
 		this->sortAllBoundaryRegions();
 		this->initBoundaryMinMaxStresses();
 		// Subtract pin, thread, PR from main mesh
+		/*
 		this->subtractRegionFromSubtractMesh(this->nodeCoordsPin_);
 		this->subtractRegionFromSubtractMesh(this->nodeCoordsThread_);
 		this->subtractRegionFromSubtractMesh(this->nodeCoordsPR_);
 	 	this->finalizeSubtractedRegionVM();
+		 */
 	}
 
 	std::string getID(){return id_;}
@@ -301,21 +314,21 @@ private:
 		// Sorting threads
 		std::sort(std::begin(this->threadRegionStress_.correspondingFEnodes),
 			std::end(this->threadRegionStress_.correspondingFEnodes),
-			[](std::shared_ptr<VonMisesNode>& a,
-				std::shared_ptr<VonMisesNode>& b){
-		return a->stress <= b->stress;
+			[](std::shared_ptr<VonMisesNode> a,
+				std::shared_ptr<VonMisesNode> b){
+		return a->stress < b->stress;
 		});		// Sorting pin
 		std::sort(std::begin(this->pinRegionStress_.correspondingFEnodes),
 			std::end(this->pinRegionStress_.correspondingFEnodes),
-			[](std::shared_ptr<VonMisesNode>& a,
-				std::shared_ptr<VonMisesNode>& b){
-		return a->stress <= b->stress;
+			[](std::shared_ptr<VonMisesNode> a,
+				std::shared_ptr<VonMisesNode> b){
+		return a->stress < b->stress;
 		});		// Sorting PR
 		std::sort(std::begin(this->PrRegionStress_.correspondingFEnodes),
 			std::end(this->PrRegionStress_.correspondingFEnodes),
-			[](std::shared_ptr<VonMisesNode>& a,
-				std::shared_ptr<VonMisesNode>& b){
-		return a->stress <= b->stress;
+			[](std::shared_ptr<VonMisesNode> a,
+				std::shared_ptr<VonMisesNode> b){
+		return a->stress < b->stress;
 		});
 	}
 

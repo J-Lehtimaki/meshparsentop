@@ -24,7 +24,7 @@ double myRecursiveAverage(const std::vector<int>& vec){
 			static_cast<double>(vec[1])
 			) / 2;
 	}
-	unsigned mid = vec.size() / 2;
+	size_t mid = vec.size() / 2;
 	
 	std::vector<int> firstHalf;
 	std::copy(vec.begin(), std::next(vec.begin(), mid),
@@ -55,10 +55,16 @@ void hello(){
 }
 
 TEST_CASE("files_with_unkown_line_count", "[light]"){
+	/*
 	std::string pathPin = "/home/janne/Ohjelmistokehitys/C++/nTop/FEAparse/test/tabularData/robust4/pin";
 	std::string pathThread = "/home/janne/Ohjelmistokehitys/C++/nTop/FEAparse/test/tabularData/robust4/thread";
 	std::string pathPR = "/home/janne/Ohjelmistokehitys/C++/nTop/FEAparse/test/tabularData/robust4/pr";
 	std::string pathFea = "/home/janne/Ohjelmistokehitys/C++/nTop/FEAparse/test/tabularData/robust4/fea";
+	*/
+	std::string pathPin = "C:\\SoftwareDevelopment\\cmake catch\\test\\tabularData\\robust4\\pin";
+	std::string pathThread = "C:\\SoftwareDevelopment\\cmake catch\\test\\tabularData\\robust4\\thread";
+	std::string pathPR = "C:\\SoftwareDevelopment\\cmake catch\\test\\tabularData\\robust4\\pr";
+	std::string pathFea = "C:\\SoftwareDevelopment\\cmake catch\\test\\tabularData\\robust4\\fea";
 
 	fe::FEBoundary feHandler("myID", pathFea, pathPin, pathThread, pathPR);
 	std::vector<fe::VonMisesNode> vonMisesVec = feHandler.getVonMisesFullRegion();
