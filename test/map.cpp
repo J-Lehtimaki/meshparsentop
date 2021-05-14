@@ -20,7 +20,6 @@ TEST_CASE("files_with_unkown_line_count"){
 
 	fe::FEBoundary feHandler("myID", pathFea, pathPin, pathThread, pathPR);
 
-
 	SECTION("constructor_added_id"){
 		REQUIRE("myID" == feHandler.getID());
 	}
@@ -35,7 +34,22 @@ TEST_CASE("files_with_unkown_line_count"){
 		threadSize << "\nPR size: " <<
 		prSize << "\nSUBTRACT MESH size: " <<
 		subtractedSize);
+		// 207648 = lines in robust4/fea
 		REQUIRE(0 == 207648 - pinSize - threadSize - prSize - subtractedSize);
+	}
+
+	SECTION("min_max_regions"){
+		WARN("PIN Min: " << feHandler.getPinMinMax().first << " Max: " << 
+		feHandler.getPinMinMax().second);
+
+		WARN("THREAD Min: " << feHandler.getThreadMinMax().first << " Max: " <<
+		feHandler.getPinMinMax().second);
+
+		WARN("PR Min: " << feHandler.getPrMinMax().first << " Max: " <<
+		feHandler.getPrMinMax().second);
+
+		WARN("SUBTRACTED Min: " << feHandler.getSubMeshMinMax().first << " Max: " <<
+		feHandler.getSubMeshMinMax().second);
 	}
 
     /*

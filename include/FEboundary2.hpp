@@ -13,6 +13,7 @@
 #include <map>
 #include <algorithm>
 #include <memory>
+#include <cmath>
 
 namespace fs = std::filesystem;
 
@@ -120,6 +121,8 @@ public:
 		});
 		this->initFEMesh();
 		this->initRegionIntersections();
+		this->sortAllRegions();
+		this->setRegionAverages();
         /*
 		this->initAllBoundaryRegionsVM();
 		this->initAllBoundaryAveragesVM();
@@ -161,7 +164,7 @@ public:
 	const double getThreadAverage(){return this->threadRegionStress_.average;}
 	const double getPrAverage(){return this->PrRegionStress_.average;}
 	const double getSubMeshAverage(){return this->subtractedMesh_.average;}
-
+	*/
 	const std::pair<double,double> getPinMinMax(){
 		return std::make_pair(
 			this->pinRegionStress_.minStress,
@@ -187,7 +190,7 @@ public:
 			this->subtractedMesh_.maxStress
 		);
 	}
-*/
+
 
 private:
 	lineparser::Parser parser_;
@@ -317,9 +320,54 @@ private:
 		
 	}
 
+	void sortAllRegions(){
+		// THREAD sort
+		std::sort(std::begin(this->threadRegionStress_.correspondingFEnodes),
+			std::end(this->threadRegionStress_.correspondingFEnodes),
+			[](std::shared_ptr<FEMeshNode> a,
+				std::shared_ptr<FEMeshNode> b){
+		return a->stress < b->stress;
+		});		// PIN sort
+		std::sort(std::begin(this->pinRegionStress_.correspondingFEnodes),
+			std::end(this->pinRegionStress_.correspondingFEnodes),
+			[](std::shared_ptr<FEMeshNode> a,
+				std::shared_ptr<FEMeshNode> b){
+		return a->stress < b->stress;
+		});		// PR sort
+		std::sort(std::begin(this->PrRegionStress_.correspondingFEnodes),
+			std::end(this->PrRegionStress_.correspondingFEnodes),
+			[](std::shared_ptr<FEMeshNode> a,
+				std::shared_ptr<FEMeshNode> b){
+		return a->stress < b->stress;
+		});		// SUBTRACTED MESH sort
+		std::sort(std::begin(this->subtractedMesh_.correspondingFEnodes),
+			std::end(this->subtractedMesh_.correspondingFEnodes),
+			[](std::shared_ptr<FEMeshNode> a,
+				std::shared_ptr<FEMeshNode> b){
+		return a->stress < b->stress;
+		});
+	}
 
+	void setRegionAverages(){
+		// PIN
+		size_t sPin = this->pinRegionStress_.correspondingFEnodes.size();
+		this->pinRegionStress_.maxStress = this->pinRegionStress_.correspondingFEnodes[sPin-1]->stress;
+		this->pinRegionStress_.minStress = this->pinRegionStress_.correspondingFEnodes[0]->stress;
+		// THREAD
+		size_t sThread = this->threadRegionStress_.correspondingFEnodes.size();
+		this->threadRegionStress_.maxStress = this->threadRegionStress_.correspondingFEnodes[sThread-1]->stress;
+		this->threadRegionStress_.minStress = this->threadRegionStress_.correspondingFEnodes[0]->stress;
+		// PR
+		size_t sPr = this->PrRegionStress_.correspondingFEnodes.size();
+		this->PrRegionStress_.maxStress = this->PrRegionStress_.correspondingFEnodes[sPr-1]->stress;
+		this->PrRegionStress_.minStress = this->PrRegionStress_.correspondingFEnodes[0]->stress;
+		// SUBTRACT REGION
+		size_t sSubstracted = this->subtractedMesh_.correspondingFEnodes.size();
+		this->subtractedMesh_.maxStress = this->subtractedMesh_.correspondingFEnodes[sSubstracted-1]->stress;
+		this->subtractedMesh_.minStress = this->subtractedMesh_.correspondingFEnodes[0]->stress;
+	}
 
-};
+};	// class
 
-}
+}	// namespace
 #endif
