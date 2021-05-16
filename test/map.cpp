@@ -52,6 +52,30 @@ TEST_CASE("files_with_unkown_line_count"){
 		feHandler.getSubMeshMinMax().second);
 	}
 
+	SECTION("init_stress_distributions"){
+		REQUIRE(true == feHandler.initAllRegionStressDistributions());
+		auto distrSub = feHandler.getSubtractRegionDistribution();
+		auto distrPin = feHandler.getPinRegionDistribution();
+		auto distrThread = feHandler.getThreadRegionDistribution();
+		auto distrPr = feHandler.getPrRegionDistribution();
+		for(auto d : distrSub){
+			WARN("SUBTRACT REGION <Min, Max> (" << d.lowerBoundStress << "," << d.upperBoundStress <<
+			") - Nodes in range: " << d.nOccurance);
+		}
+		for(auto d : distrPin){
+			WARN("PIN REGION <Min, Max> (" << d.lowerBoundStress << "," << d.upperBoundStress <<
+			") - Nodes in range: " << d.nOccurance);
+		}
+		for(auto d : distrThread){
+			WARN("THREAD REGION <Min, Max> (" << d.lowerBoundStress << "," << d.upperBoundStress <<
+			") - Nodes in range: " << d.nOccurance);
+		}
+		for(auto d : distrPr){
+			WARN("PR REGION <Min, Max> (" << d.lowerBoundStress << "," << d.upperBoundStress <<
+			") - Nodes in range: " << d.nOccurance);
+		}
+	}
+
     /*
 	SECTION("pin_average"){
 		WARN("Pin average: " << feHandler.getPinAverage() <<

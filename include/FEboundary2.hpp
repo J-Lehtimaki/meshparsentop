@@ -3,6 +3,7 @@
 
 #include "subheaders/vonMisesNtopFileReader.hpp"
 #include "subheaders/lineparser.hpp"
+#include "subheaders/constants.hpp"
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -74,8 +75,15 @@ struct FEMeshNode{
 };
 
 struct StressFrequencyDistribution{
-	double lowerBoundStress;
-	double upperBoundStress;
+	StressFrequencyDistribution(
+		unsigned l,
+		unsigned h,
+		unsigned n) :
+			lowerBoundStress(l),
+			upperBoundStress(h),
+			nOccurance(n){}
+	unsigned lowerBoundStress;
+	unsigned upperBoundStress;
 	unsigned nOccurance;
 };
 
@@ -191,7 +199,33 @@ public:
 		);
 	}
 
+	bool initAllRegionStressDistributions(){
+		this->initRegionStressDistributions(this->subtractedMesh_);
+		this->initRegionStressDistributions(this->pinRegionStress_);
+		this->initRegionStressDistributions(this->threadRegionStress_);
+		this->initRegionStressDistributions(this->PrRegionStress_);
+		if(this->subtractedMesh_.stressFrequencyDistribution.size() == 0 ||
+			this->pinRegionStress_.stressFrequencyDistribution.size() == 0 ||
+			this->threadRegionStress_.stressFrequencyDistribution.size() == 0 ||
+			this->PrRegionStress_.stressFrequencyDistribution.size() == 0){
+				return false;
+		}
+		return true;
+	}
 
+	const std::vector<StressFrequencyDistribution> getSubtractRegionDistribution(){
+		return this->subtractedMesh_.stressFrequencyDistribution;
+	}
+	const std::vector<StressFrequencyDistribution> getPinRegionDistribution(){
+		return this->pinRegionStress_.stressFrequencyDistribution;
+	}
+	const std::vector<StressFrequencyDistribution> getThreadRegionDistribution(){
+		return this->threadRegionStress_.stressFrequencyDistribution;
+	}
+	const std::vector<StressFrequencyDistribution> getPrRegionDistribution(){
+		return this->PrRegionStress_.stressFrequencyDistribution;
+	}
+	
 private:
 	lineparser::Parser parser_;
 
@@ -219,8 +253,37 @@ private:
 
 	/* MEMBER FUNCTIONS PRIVATE */
 
-	void initRegionsStresses(){
-
+	void initRegionStressDistributions(RegionStressData& region){
+		// PIN
+		// Find the range iterators where nodes will be counter to freqDistr
+		for(auto limits : feConstants::FREQUENCY_DISTRIBUTION_LIMITS){
+			// temp variable for counting the occurances of nodes in range
+			unsigned nCount = 0;
+			auto lowIt = std::find_if(
+				region.correspondingFEnodes.begin(),
+				region.correspondingFEnodes.end(),
+				[&](std::shared_ptr<FEMeshNode>& a){
+					return a->stress > limits.first;
+			});
+			auto highIt = std::find_if(
+				region.correspondingFEnodes.begin(),
+				region.correspondingFEnodes.end(),
+				[&](std::shared_ptr<FEMeshNode>& a){
+					return a->stress > limits.second;
+			});
+			if(lowIt!=region.correspondingFEnodes.end() && lowIt!=highIt){
+				// Iterate over region and count the occaurances
+				while(lowIt != region.correspondingFEnodes.end()){
+					if((*lowIt)->stress > limits.second){break;}
+					nCount++;
+					lowIt++;
+				}
+			}
+			// Save results
+			region.stressFrequencyDistribution.push_back(
+				StressFrequencyDistribution(limits.first, limits.second, nCount)
+			);
+		}
 	}
 
 	void initRegionIntersections(){
