@@ -53,7 +53,6 @@ TEST_CASE("files_with_unkown_line_count"){
 	}
 
 	SECTION("init_stress_distributions"){
-		REQUIRE(true == feHandler.initAllRegionStressDistributions());
 		auto distrSub = feHandler.getSubtractRegionDistribution();
 		auto distrPin = feHandler.getPinRegionDistribution();
 		auto distrThread = feHandler.getThreadRegionDistribution();

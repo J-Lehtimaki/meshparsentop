@@ -4,6 +4,7 @@
 #include "subheaders/vonMisesNtopFileReader.hpp"
 #include "subheaders/lineparser.hpp"
 #include "subheaders/constants.hpp"
+#include "subheaders/filewriter.hpp"
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -131,19 +132,8 @@ public:
 		this->initRegionIntersections();
 		this->sortAllRegions();
 		this->setRegionAverages();
-        /*
-		this->initAllBoundaryRegionsVM();
-		this->initAllBoundaryAveragesVM();
-		this->sortAllBoundaryRegions();
-		this->initBoundaryMinMaxStresses();
-        */
-		// Subtract pin, thread, PR from main mesh
-		
-		//this->subtractRegionFromSubtractMesh(this->nodeCoordsPin_);
-		//this->subtractRegionFromSubtractMesh(this->nodeCoordsThread_);
-		//this->subtractRegionFromSubtractMesh(this->nodeCoordsPR_);
-	 	//this->finalizeSubtractedRegionVM();
-		 
+		this->initAllRegionStressDistributions();
+		this->exportStressDistributions();
 	}
 
 	std::string getID(){return id_;}
@@ -225,7 +215,7 @@ public:
 	const std::vector<StressFrequencyDistribution> getPrRegionDistribution(){
 		return this->PrRegionStress_.stressFrequencyDistribution;
 	}
-	
+
 private:
 	lineparser::Parser parser_;
 
@@ -428,6 +418,10 @@ private:
 		size_t sSubstracted = this->subtractedMesh_.correspondingFEnodes.size();
 		this->subtractedMesh_.maxStress = this->subtractedMesh_.correspondingFEnodes[sSubstracted-1]->stress;
 		this->subtractedMesh_.minStress = this->subtractedMesh_.correspondingFEnodes[0]->stress;
+	}
+
+	void exportStressDistributions(){
+		
 	}
 
 };	// class
