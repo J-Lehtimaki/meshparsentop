@@ -1,11 +1,14 @@
 #ifndef FILEWRITER_H
 #define FILEWRITER_H
 
+#include "structs.hpp"
+
 #include <string>
 #include <fstream>
 #include <filesystem>
 #include <vector>
 #include <utility> // std::pair
+
 
 namespace fs = std::filesystem;
 
@@ -37,6 +40,19 @@ void write_csv(fs::path filename, std::vector<std::pair<std::string, std::vector
     // Close the file
     myFile.close();
 }
+
+// Modified version, suitable for feboundary -class
+void write_csv(fs::path filename, const std::vector<fe::StressFrequencyDistribution>& dataset){ 
+    // Create an output filestream object
+    std::ofstream myFile(filename);
+    // Send data to the stream
+    for(int j = 0; j < dataset.size(); ++j){
+        myFile << dataset.at(j).upperBoundStress << "," << dataset.at(j).nOccurance << "\n";
+    }
+    // Close the file
+    myFile.close();
+}
+
 }
 
 #endif
