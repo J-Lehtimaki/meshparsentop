@@ -4,3 +4,5 @@ build/*
 *.swp
 
 RockerFeTests/*
+test/export/*
+test/tabularData/*

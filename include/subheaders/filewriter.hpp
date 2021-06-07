@@ -53,6 +53,15 @@ void write_csv(fs::path filename, const std::vector<fe::StressFrequencyDistribut
     myFile.close();
 }
 
+// Overload. Writes plain stress values for each node of a given set
+void write_csv_plain_region(fs::path filename, const std::vector<std::shared_ptr<fe::FEMeshNode>>& nodes){
+    std::ofstream myFile(filename);
+    for(int i = 0; 0 < nodes.size(); ++i){
+        myFile << nodes.at(i)->stress << "\n";
+    }
+    myFile.close();
+}
+
 }
 
 #endif

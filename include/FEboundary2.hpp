@@ -321,14 +321,16 @@ private:
 	}
 
 	void exportStressDistributions(){
-		writer::write_csv("C:\\SoftwareDevelopment\\cmake catch\\test\\export\\subtracedExport.csv",
+		writer::write_csv("C:\\SoftwareDevelopment\\cmake catch\\test\\export\\viking_1\\subtracedExport_viking_1.csv",
 			subtractedMesh_.stressFrequencyDistribution);
-		writer::write_csv("C:\\SoftwareDevelopment\\cmake catch\\test\\export\\threadExport.csv",
+		writer::write_csv("C:\\SoftwareDevelopment\\cmake catch\\test\\export\\viking_1\\threadExport_viking_1.csv",
 			threadRegionStress_.stressFrequencyDistribution);
-		writer::write_csv("C:\\SoftwareDevelopment\\cmake catch\\test\\export\\pinExport.csv",
+		writer::write_csv("C:\\SoftwareDevelopment\\cmake catch\\test\\export\\viking_1\\pinExport_viking_1.csv",
 			pinRegionStress_.stressFrequencyDistribution);
-		writer::write_csv("C:\\SoftwareDevelopment\\cmake catch\\test\\export\\prExport.csv",
+		writer::write_csv("C:\\SoftwareDevelopment\\cmake catch\\test\\export\\viking_1\\prExport_viking_1.csv",
 			PrRegionStress_.stressFrequencyDistribution);
+		writer::write_csv_plain_region("C:\\SoftwareDevelopment\\cmake catch\\test\\export\\viking_1\\subtracted_plain_viking_1.csv",
+			subtractedMesh_.correspondingFEnodes);
 
 		// .stressFrequencyDistribution
 		//RegionStressData subtractedMesh_;

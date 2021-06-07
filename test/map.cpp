@@ -13,10 +13,10 @@ TEST_CASE("files_with_unkown_line_count"){
 	std::string pathPR = "/home/janne/Ohjelmistokehitys/C++/nTop/FEAparse/test/tabularData/robust4/pr";
 	std::string pathFea = "/home/janne/Ohjelmistokehitys/C++/nTop/FEAparse/test/tabularData/robust4/fea";
 	*/
-	std::string pathPin = "C:\\SoftwareDevelopment\\cmake catch\\test\\tabularData\\robust4\\pin";
-	std::string pathThread = "C:\\SoftwareDevelopment\\cmake catch\\test\\tabularData\\robust4\\thread";
-	std::string pathPR = "C:\\SoftwareDevelopment\\cmake catch\\test\\tabularData\\robust4\\pr";
-	std::string pathFea = "C:\\SoftwareDevelopment\\cmake catch\\test\\tabularData\\robust4\\fea";
+	std::string pathPin = "C:\\SoftwareDevelopment\\cmake catch\\test\\tabularData\\viking_1\\pin";
+	std::string pathThread = "C:\\SoftwareDevelopment\\cmake catch\\test\\tabularData\\viking_1\\thread";
+	std::string pathPR = "C:\\SoftwareDevelopment\\cmake catch\\test\\tabularData\\viking_1\\pr";
+	std::string pathFea = "C:\\SoftwareDevelopment\\cmake catch\\test\\tabularData\\viking_1\\fea.csv";
 
 	fe::FEBoundary feHandler("myID", pathFea, pathPin, pathThread, pathPR);
 
@@ -35,7 +35,7 @@ TEST_CASE("files_with_unkown_line_count"){
 		prSize << "\nSUBTRACT MESH size: " <<
 		subtractedSize);
 		// 207648 = lines in robust4/fea
-		REQUIRE(0 == 207648 - pinSize - threadSize - prSize - subtractedSize);
+		REQUIRE(0 == 180608 - pinSize - threadSize - prSize - subtractedSize);
 	}
 
 	SECTION("min_max_regions"){
