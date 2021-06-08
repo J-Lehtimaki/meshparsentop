@@ -3,6 +3,6 @@ build/*
 
 *.swp
 
-test/export/
+test/export/*
 test/tabularData/
 RockerFeTests/

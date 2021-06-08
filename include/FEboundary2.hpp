@@ -56,7 +56,6 @@ public:
 		this->initRegionIntersections();
 		this->sortAllRegions();
 		this->setRegionAverages();
-		this->initAllRegionStressDistributions();
 		this->exportStressDistributions();		// TODO: remove this from construction after debug
 	}
 
@@ -121,19 +120,19 @@ public:
 			this->subtractedMesh_.maxStress
 		);
 	}
-	bool initAllRegionStressDistributions(){
-		this->initRegionStressDistributions(this->subtractedMesh_);
-		this->initRegionStressDistributions(this->pinRegionStress_);
-		this->initRegionStressDistributions(this->threadRegionStress_);
-		this->initRegionStressDistributions(this->PrRegionStress_);
-		if(this->subtractedMesh_.stressFrequencyDistribution.size() == 0 ||
-			this->pinRegionStress_.stressFrequencyDistribution.size() == 0 ||
-			this->threadRegionStress_.stressFrequencyDistribution.size() == 0 ||
-			this->PrRegionStress_.stressFrequencyDistribution.size() == 0){
-				return false;
-		}
-		return true;
-	}
+	// bool initAllRegionStressDistributions(){
+	// 	this->initRegionStressDistributions(this->subtractedMesh_);
+	// 	this->initRegionStressDistributions(this->pinRegionStress_);
+	// 	this->initRegionStressDistributions(this->threadRegionStress_);
+	// 	this->initRegionStressDistributions(this->PrRegionStress_);
+	// 	if(this->subtractedMesh_.stressFrequencyDistribution.size() == 0 ||
+	// 		this->pinRegionStress_.stressFrequencyDistribution.size() == 0 ||
+	// 		this->threadRegionStress_.stressFrequencyDistribution.size() == 0 ||
+	// 		this->PrRegionStress_.stressFrequencyDistribution.size() == 0){
+	// 			return false;
+	// 	}
+	// 	return true;
+	// }
 
 	// Description:
 	// 	Approximates if the solution in question is feasible against the
@@ -152,7 +151,8 @@ public:
 	//	- Subtracted mesh's corrersponding FE mesh nodes has to be (asc)sorted
 	const bool isFeasibleSolution(){
 		// Max number of nodes allowed above design limit stress
-		unsigned maxCount = this->subtractedMesh_.correspondingFEnodes.size() / 1000;
+		unsigned maxCount = this->subtractedMesh_.correspondingFEnodes.size() / 
+			feConstants::NODE_COUNT_FEASIBILITY_RATIO;
 		unsigned nCount = 0;	// Node count found to be above design limit stress
 		// Find design limit stress position
 		auto lowIt = std::find_if(
@@ -208,39 +208,6 @@ private:
 	RegionStressData PrRegionStress_;
 
 	/* MEMBER FUNCTIONS PRIVATE */
-
-	void initRegionStressDistributions(RegionStressData& region){
-		// PIN
-		// Find the range iterators where nodes will be counter to freqDistr
-		for(auto limits : feConstants::FREQUENCY_DISTRIBUTION_LIMITS){
-			// temp variable for counting the occurances of nodes in range
-			unsigned nCount = 0;
-			auto lowIt = std::find_if(
-				region.correspondingFEnodes.begin(),
-				region.correspondingFEnodes.end(),
-				[&](std::shared_ptr<FEMeshNode>& a){
-				return a->stress > limits.first;
-			});
-			auto highIt = std::find_if(
-				region.correspondingFEnodes.begin(),
-				region.correspondingFEnodes.end(),
-				[&](std::shared_ptr<FEMeshNode>& a){
-				return a->stress > limits.second;
-			});
-			if(lowIt!=region.correspondingFEnodes.end() && lowIt!=highIt){
-				// Iterate over region and count the occaurances
-				while(lowIt != region.correspondingFEnodes.end()){
-					if((*lowIt)->stress > limits.second){break;}
-					nCount++;
-					lowIt++;
-				}
-			}
-			// Save results
-			region.stressFrequencyDistribution.push_back(
-				StressFrequencyDistribution(limits.first, limits.second, nCount)
-			);
-		}
-	}
 
 	void initRegionIntersections(){
 		// PIN
