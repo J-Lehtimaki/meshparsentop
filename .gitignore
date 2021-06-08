@@ -2,3 +2,7 @@ build/*
 .vscode/*
 
 *.swp
+
+test/export/
+test/tabularData/
+RockerFeTests/

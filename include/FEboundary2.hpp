@@ -82,6 +82,19 @@ public:
 	const std::vector<StressFrequencyDistribution> getPrRegionDistribution(){
 		return this->PrRegionStress_.stressFrequencyDistribution;
 	}
+	const double getPinAverage(){
+		return myRecursiveAverage(this->pinRegionStress_.correspondingFEnodes);
+	}
+	const double getThreadAverage(){
+		return myRecursiveAverage(this->threadRegionStress_.correspondingFEnodes);
+	}
+	const double getPrAverage(){
+		return myRecursiveAverage(this->PrRegionStress_.correspondingFEnodes);
+	}
+	const double getSubMeshAverage(){
+		return myRecursiveAverage(this->subtractedMesh_.correspondingFEnodes);
+	}
+
 	const std::pair<double,double> getPinMinMax(){
 		return std::make_pair(
 			this->pinRegionStress_.minStress,
@@ -318,6 +331,34 @@ private:
 		size_t sSubstracted = this->subtractedMesh_.correspondingFEnodes.size();
 		this->subtractedMesh_.maxStress = this->subtractedMesh_.correspondingFEnodes[sSubstracted-1]->stress;
 		this->subtractedMesh_.minStress = this->subtractedMesh_.correspondingFEnodes[0]->stress;
+	}
+
+	// Calculates average recursively. Helps to manage that sum(vec_i) does not
+	// exceed integer range limit
+	double myRecursiveAverage(const std::vector<std::shared_ptr<FEMeshNode>>& vec){
+		if(vec.size() == 1){
+			return static_cast<double>(vec[0]->stress);
+		}
+		if(vec.size() == 2){
+			return (
+				static_cast<double>(vec[0]->stress) +
+				static_cast<double>(vec[1]->stress)
+				) / 2;
+		}
+		unsigned mid = vec.size() / 2;
+		
+		std::vector<std::shared_ptr<FEMeshNode>> firstHalf;
+		std::copy(vec.begin(), std::next(vec.begin(), mid),
+			std::back_inserter(firstHalf));
+			
+		std::vector<std::shared_ptr<FEMeshNode>> secondHalf;
+		std::copy(std::next(std::next(vec.begin(), mid)), vec.end(),
+			std::back_inserter(secondHalf));
+	
+		return(
+			myRecursiveAverage(firstHalf) +
+			myRecursiveAverage(secondHalf)
+			) / 2;
 	}
 
 	void exportStressDistributions(){

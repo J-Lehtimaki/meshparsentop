@@ -22,7 +22,8 @@ find_package(Catch2 REQUIRED)
 #add_executable(feboundary_test test/test_parser.cpp)
 #add_executable(feboundary_test test/test_parser_4.cpp)
 #add_executable(feboundary_test test/sort.cpp)
-add_executable(feboundary_test test/map.cpp)
+#add_executable(feboundary_test test/map.cpp)
+add_executable(feboundary_test test/dynamic_stress_limit.cpp)
 
 # Note: MSVC links filesystem automatically
 target_link_libraries(
