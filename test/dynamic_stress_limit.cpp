@@ -12,16 +12,19 @@ TEST_CASE("files_with_unkown_line_count"){
 	std::string pathPR = "C:\\SoftwareDevelopment\\cmake catch\\test\\tabularData\\robust4\\pr";
 	std::string pathFea = "C:\\SoftwareDevelopment\\cmake catch\\test\\tabularData\\robust4\\fea.csv";
 
-	fe::FEBoundary feHandler("myID", pathFea, pathPin, pathThread, pathPR);
+    // Export paths for feasible solutions
+    std::string pathExportSubtractRegion = "C:\\SoftwareDevelopment\\cmake catch\\test\\export\\subtracedExport.csv";
+    std::string pathExportRegionData = "C:\\SoftwareDevelopment\\cmake catch\\test\\export\\regionData.csv";
 
-	SECTION("constructor_added_id"){
-		REQUIRE("myID" == feHandler.getID());
-	}
-
-	SECTION("test_region_sizes"){
-		// 207648 = lines in robust4/fea
-		// REQUIRE(0 == 207648 - pinSize - threadSize - prSize - subtractedSize);
-	}
+	fe::FEBoundary feHandler(
+        200000000,      // 100 MPa design limit stress for testing
+        pathFea,
+        pathPin,
+        pathThread,
+        pathPR,
+        pathExportSubtractRegion,
+        pathExportRegionData
+    );
 
 	SECTION("initialized_stress_distributions"){
 		auto distrSub = feHandler.getSubtractRegionDistribution();
@@ -69,5 +72,9 @@ TEST_CASE("files_with_unkown_line_count"){
 		" Pa\nMin: " << feHandler.getSubMeshMinMax().first << " Max: " <<
 		feHandler.getSubMeshMinMax().second);	
 	}
+
+    SECTION("is_feasible_100MPa"){
+        WARN("Is feasible solution: " << feHandler.isFeasibleSolution());
+    }
 
 }

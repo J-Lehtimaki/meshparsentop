@@ -27,16 +27,20 @@ using regionPathLink = std::pair<fs::path, std::vector<Coordinate>*>;
 class FEBoundary{
 public:
 	FEBoundary(
-		std::string id,
+		unsigned designLimitStress,
 		std::string FEfullPath,
 		std::string pinPath,
 		std::string threadPath,
-		std::string PRPath) :
-			id_(id),
+		std::string PRPath,
+		std::string subtractRegionExportPath,
+		std::string regionDataExportPath) :
+			designLimitStress_(designLimitStress),
 			meshPath_(fs::path(FEfullPath)),
 			pinPath_(fs::path(pinPath)),
 			threadPath_(fs::path(threadPath)),
 			prPath_(fs::path(PRPath)),
+			subtractRegionExportPath_(fs::path(subtractRegionExportPath)),
+			regionDataExportPath_(fs::path(regionDataExportPath)),
 			parser_(lineparser::Parser(",",".")),
 			subtractedMesh_(RegionStressData()),
 			pinRegionStress_(RegionStressData()),
@@ -53,10 +57,8 @@ public:
 		this->sortAllRegions();
 		this->setRegionAverages();
 		this->initAllRegionStressDistributions();
-		this->exportStressDistributions();
+		this->exportStressDistributions();		// TODO: remove this from construction after debug
 	}
-
-	std::string getID(){return id_;}
 
 	const unsigned getPinIntersectionSize(){
 		return static_cast<unsigned>(this->pinRegionStress_.correspondingFEnodes.size());
@@ -133,15 +135,62 @@ public:
 		return true;
 	}
 
+	// Description:
+	// 	Approximates if the solution in question is feasible against the
+	// 	design limit stress. This is only approximation, because the final
+	// 	FE validation should be done with more robust software than nTopology.
+	// 	Also the part geometry will slightly change and FE-calculated mesh is
+	// 	converted to printable file format (.stp, .x_t, .stl, ...)
+	//
+	//                                                           Design limit stress
+	//  "Subtracted Region Node Stress Array"                    |
+	//	{0000000000000000000000000000000000000000000000000000000000000000000}
+	//                                                           ^^^^^^^^^^^
+	//                                                           less than promille
+	// Pre-condition:
+	//	- Subtracted mesh has to be initialized
+	//	- Subtracted mesh's corrersponding FE mesh nodes has to be (asc)sorted
+	const bool isFeasibleSolution(){
+		// Max number of nodes allowed above design limit stress
+		unsigned maxCount = this->subtractedMesh_.correspondingFEnodes.size() / 1000;
+		unsigned nCount = 0;	// Node count found to be above design limit stress
+		// Find design limit stress position
+		auto lowIt = std::find_if(
+			this->subtractedMesh_.correspondingFEnodes.begin(),
+			this->subtractedMesh_.correspondingFEnodes.end(),
+			[&](std::shared_ptr<FEMeshNode>& a){
+				return a->stress > this->designLimitStress_;
+			}
+		);
+		// Count the nodes above design limit stress
+		if(lowIt!=this->subtractedMesh_.correspondingFEnodes.end()){
+			// Iterate over region and count the occaurances
+			while(lowIt != this->subtractedMesh_.correspondingFEnodes.end()){
+				nCount++;
+				lowIt++;
+			}
+		}
+		// Deduce approximation about feasibilitiness of the solution in question
+		// and save the exported results to hardrive if solution was feasible
+		if(nCount < maxCount){
+			// TODO: Export csv here
+			return true;
+		}
+		return false;
+	}
+
 private:
 	lineparser::Parser parser_;
 
-	std::string id_;		// Multigoal optimization case ID
+	unsigned designLimitStress_;
 
 	fs::path meshPath_;		// FE results
 	fs::path pinPath_;		// extracted lattice node coordinates
 	fs::path threadPath_;	// extracted lattice node coordinates
 	fs::path prPath_;		// extracted lattice node coordinates
+
+	fs::path subtractRegionExportPath_;
+	fs::path regionDataExportPath_;
 
 	std::vector<FEMeshNode> feNodes_;		// Main container for saving
 	std::map<Coordinate, std::shared_ptr<FEMeshNode>> mapFeNodes_;	// Container for searches
@@ -232,7 +281,6 @@ private:
 		this->subtractHelperFEnodeContainer_.clear();
 	}
 
-
 	// Takes a set of paths and references to Coordinate-vector and then
 	// pushes all the values from file to the datastructure that was passed
 	void initSubRegionCoordinates(std::vector<regionPathLink> criticalRegions){
@@ -281,9 +329,7 @@ private:
 			}
 		}
 		infile.close();
-
 		this->subtractHelperFEnodeContainer_ = this->mapFeNodes_;
-		
 	}
 
 	void sortAllRegions(){
@@ -346,15 +392,15 @@ private:
 				) / 2;
 		}
 		unsigned mid = vec.size() / 2;
-		
+
 		std::vector<std::shared_ptr<FEMeshNode>> firstHalf;
 		std::copy(vec.begin(), std::next(vec.begin(), mid),
 			std::back_inserter(firstHalf));
-			
+
 		std::vector<std::shared_ptr<FEMeshNode>> secondHalf;
 		std::copy(std::next(std::next(vec.begin(), mid)), vec.end(),
 			std::back_inserter(secondHalf));
-	
+
 		return(
 			myRecursiveAverage(firstHalf) +
 			myRecursiveAverage(secondHalf)
@@ -370,12 +416,6 @@ private:
 			pinRegionStress_.stressFrequencyDistribution);
 		writer::write_csv("C:\\SoftwareDevelopment\\cmake catch\\test\\export\\prExport.csv",
 			PrRegionStress_.stressFrequencyDistribution);
-
-		// .stressFrequencyDistribution
-		//RegionStressData subtractedMesh_;
-		//RegionStressData pinRegionStress_;
-		//RegionStressData threadRegionStress_;
-		//RegionStressData PrRegionStress_;
 	}
 
 };	// class
