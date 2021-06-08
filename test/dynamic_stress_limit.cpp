@@ -6,7 +6,7 @@
 #include <vector>
 #include <iomanip>
 
-TEST_CASE("files_with_unkown_line_count"){
+TEST_CASE("dynamic_stress"){
 	std::string pathPin = "C:\\SoftwareDevelopment\\cmake catch\\test\\tabularData\\robust4\\pin";
 	std::string pathThread = "C:\\SoftwareDevelopment\\cmake catch\\test\\tabularData\\robust4\\thread";
 	std::string pathPR = "C:\\SoftwareDevelopment\\cmake catch\\test\\tabularData\\robust4\\pr";
@@ -50,7 +50,8 @@ TEST_CASE("files_with_unkown_line_count"){
 		feHandler.getSubMeshMinMax().second);	
 	}
 
-    SECTION("is_feasible_100MPa"){
+	// dynamic_stress -c feasibility
+    SECTION("feasibility"){
         WARN("Is feasible solution: " << feHandler.isFeasibleSolution());
     }
 

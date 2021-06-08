@@ -55,8 +55,7 @@ public:
 		this->initFEMesh();
 		this->initRegionIntersections();
 		this->sortAllRegions();
-		this->setRegionAverages();
-		this->exportStressDistributions();		// TODO: remove this from construction after debug
+		this->setRegionMinMaxStress();
 	}
 
 	const unsigned getPinIntersectionSize(){
@@ -83,16 +82,16 @@ public:
 	const std::vector<StressFrequencyDistribution> getPrRegionDistribution(){
 		return this->PrRegionStress_.stressFrequencyDistribution;
 	}
-	const double getPinAverage(){
+	double getPinAverage(){
 		return myRecursiveAverage(this->pinRegionStress_.correspondingFEnodes);
 	}
-	const double getThreadAverage(){
+	double getThreadAverage(){
 		return myRecursiveAverage(this->threadRegionStress_.correspondingFEnodes);
 	}
-	const double getPrAverage(){
+	double getPrAverage(){
 		return myRecursiveAverage(this->PrRegionStress_.correspondingFEnodes);
 	}
-	const double getSubMeshAverage(){
+	double getSubMeshAverage(){
 		return myRecursiveAverage(this->subtractedMesh_.correspondingFEnodes);
 	}
 
@@ -120,19 +119,6 @@ public:
 			this->subtractedMesh_.maxStress
 		);
 	}
-	// bool initAllRegionStressDistributions(){
-	// 	this->initRegionStressDistributions(this->subtractedMesh_);
-	// 	this->initRegionStressDistributions(this->pinRegionStress_);
-	// 	this->initRegionStressDistributions(this->threadRegionStress_);
-	// 	this->initRegionStressDistributions(this->PrRegionStress_);
-	// 	if(this->subtractedMesh_.stressFrequencyDistribution.size() == 0 ||
-	// 		this->pinRegionStress_.stressFrequencyDistribution.size() == 0 ||
-	// 		this->threadRegionStress_.stressFrequencyDistribution.size() == 0 ||
-	// 		this->PrRegionStress_.stressFrequencyDistribution.size() == 0){
-	// 			return false;
-	// 	}
-	// 	return true;
-	// }
 
 	// Description:
 	// 	Approximates if the solution in question is feasible against the
@@ -142,7 +128,7 @@ public:
 	// 	converted to printable file format (.stp, .x_t, .stl, ...)
 	//
 	//                                                           Design limit stress
-	//  "Subtracted Region Node Stress Array"                    |
+	//  (MIN)   "Subtracted Region Node Stress Array (sorted)"   |      (MAX)
 	//	{0000000000000000000000000000000000000000000000000000000000000000000}
 	//                                                           ^^^^^^^^^^^
 	//                                                           less than promille
@@ -173,7 +159,7 @@ public:
 		// Deduce approximation about feasibilitiness of the solution in question
 		// and save the exported results to hardrive if solution was feasible
 		if(nCount < maxCount){
-			// TODO: Export csv here
+			exportStressData();
 			return true;
 		}
 		return false;
@@ -327,7 +313,7 @@ private:
 		});
 	}
 
-	void setRegionAverages(){
+	void setRegionMinMaxStress(){
 		// PIN
 		size_t sPin = this->pinRegionStress_.correspondingFEnodes.size();
 		this->pinRegionStress_.maxStress = this->pinRegionStress_.correspondingFEnodes[sPin-1]->stress;
@@ -374,15 +360,17 @@ private:
 			) / 2;
 	}
 
-	void exportStressDistributions(){
-		writer::write_csv("C:\\SoftwareDevelopment\\cmake catch\\test\\export\\subtracedExport.csv",
-			subtractedMesh_.stressFrequencyDistribution);
-		writer::write_csv("C:\\SoftwareDevelopment\\cmake catch\\test\\export\\threadExport.csv",
-			threadRegionStress_.stressFrequencyDistribution);
-		writer::write_csv("C:\\SoftwareDevelopment\\cmake catch\\test\\export\\pinExport.csv",
-			pinRegionStress_.stressFrequencyDistribution);
-		writer::write_csv("C:\\SoftwareDevelopment\\cmake catch\\test\\export\\prExport.csv",
-			PrRegionStress_.stressFrequencyDistribution);
+	void exportStressData(){
+		writer::writeStressAttributeDataCSV(
+			this->regionDataExportPath_,
+			static_cast<unsigned>(this->subtractedMesh_.minStress / 1),
+			static_cast<unsigned>(this->subtractedMesh_.maxStress / 1),
+			static_cast<unsigned>(getSubMeshAverage() / 1)
+		);
+		writer::writeRegionNodeStressCSV(
+			this->subtractRegionExportPath_,
+			this->subtractedMesh_.correspondingFEnodes
+		);
 	}
 
 };	// class

@@ -7,12 +7,6 @@
 #include <iomanip>
 
 TEST_CASE("files_with_unkown_line_count"){
-	/*
-	std::string pathPin = "/home/janne/Ohjelmistokehitys/C++/nTop/FEAparse/test/tabularData/robust4/pin";
-	std::string pathThread = "/home/janne/Ohjelmistokehitys/C++/nTop/FEAparse/test/tabularData/robust4/thread";
-	std::string pathPR = "/home/janne/Ohjelmistokehitys/C++/nTop/FEAparse/test/tabularData/robust4/pr";
-	std::string pathFea = "/home/janne/Ohjelmistokehitys/C++/nTop/FEAparse/test/tabularData/robust4/fea";
-	*/
 	std::string pathPin = "C:\\SoftwareDevelopment\\cmake catch\\test\\tabularData\\robust4\\pin";
 	std::string pathThread = "C:\\SoftwareDevelopment\\cmake catch\\test\\tabularData\\robust4\\thread";
 	std::string pathPR = "C:\\SoftwareDevelopment\\cmake catch\\test\\tabularData\\robust4\\pr";
@@ -74,30 +68,4 @@ TEST_CASE("files_with_unkown_line_count"){
 			") - Nodes in range: " << d.nOccurance);
 		}
 	}
-
-    /*
-	SECTION("pin_average"){
-		WARN("Pin average: " << feHandler.getPinAverage() <<
-		" Pa\nMin: " << feHandler.getPinMinMax().first << " Max: " << 
-		feHandler.getPinMinMax().second);
-	}
-
-	SECTION("thread_average"){
-		WARN("Thread average: " << feHandler.getThreadAverage() <<
-		" Pa\nMin: " << feHandler.getThreadMinMax().first << " Max: " <<
-		feHandler.getPinMinMax().second);
-	}
-
-	SECTION("pr_average"){
-		WARN("PR average: " << feHandler.getPrAverage() <<
-		" Pa\nMin: " << feHandler.getPrMinMax().first << " Max: " <<
-		feHandler.getPrMinMax().second);
-	}
-
-	SECTION("subMesh_average"){
-		WARN("SubMesh average: " << feHandler.getSubMeshAverage() <<
-		" Pa\nMin: " << feHandler.getSubMeshMinMax().first << " Max: " <<
-		feHandler.getSubMeshMinMax().second);	
-	}
-    */
 }
