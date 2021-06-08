@@ -16,13 +16,6 @@ target_include_directories(
 find_package(Catch2 REQUIRED)
 
 # Tests, don't remove commented executables
-#add_executable(feboundary_test test/test.cpp)
-#add_executable(feboundary_test test/struct_comparators.cpp)
-#add_executable(feboundary_test test/test_ntop_x_size.cpp)
-#add_executable(feboundary_test test/test_parser.cpp)
-#add_executable(feboundary_test test/test_parser_4.cpp)
-#add_executable(feboundary_test test/sort.cpp)
-#add_executable(feboundary_test test/map.cpp)
 add_executable(feboundary_test test/dynamic_stress_limit.cpp)
 
 # Note: MSVC links filesystem automatically
